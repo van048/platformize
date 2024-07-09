@@ -590,7 +590,7 @@ module.exports = Behavior({
 
       // 手动调
       // The light's luminous intensity measured in candela (cd). Default is 1.
-      child.intensity *= 80;
+      child.intensity = 3;
       // this.scene.add(child)
       light = child;
 
