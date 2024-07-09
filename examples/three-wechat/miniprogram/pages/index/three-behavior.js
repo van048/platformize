@@ -147,6 +147,7 @@ let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338);
 let light;
 
 const fanLeafGroupMatrix = new THREE.Matrix4();
+const upDownGroupMatrix = new THREE.Matrix4()
 
 // 调试开关
 const debugObj = {
@@ -192,6 +193,21 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    initUpDownGroup() {
+      this.upDownGroupObj = this.group.find(
+        (it) => it.desc == '上下摇头除去扇叶'
+      )
+      this.upDownGroup = this.upDownGroupObj.object_list
+      this.upDownGroup.matrixAutoUpdate = false // 禁用自动更新矩阵
+      let offset = new THREE.Vector3(
+        0.0002563020907130481,
+        0.8984388716086597,
+        0.1061891151791681
+      )
+      this.changePivot(offset, this.upDownGroup)
+      this.upDownGroup.updateMatrix()
+      upDownGroupMatrix.copy(this.upDownGroup.matrix)
+    },
     changePivot(offset, group) {
       group.position.set(
         group.position.x + offset.x,
