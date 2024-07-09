@@ -141,7 +141,7 @@ let cameraInitTargetOff = new THREE.Vector3(
   -0.0962711995010399,
   0.23568405126528758,
   0
-)
+);
 let cameraInitTarget;
 let cameraAnimForwardHome = {
   startPos: null,
@@ -185,7 +185,7 @@ const debugObj = {
   // mockStatus: isPC(),
   mockStatus: true,
   mockStatusObj: {
-    power: "off",
+    power: "on",
     gear: 1,
     ud_swing_angle: 60,
     // swing_direction: 'ud',
@@ -313,7 +313,7 @@ module.exports = Behavior({
 
       const that = this;
       requestAnimationFrame(() => {
-        that.animateUpdate;
+        that.animateUpdate();
       });
     },
     calLrDeg() {
