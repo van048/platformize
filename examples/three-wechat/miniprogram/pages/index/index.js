@@ -1,7 +1,6 @@
 "use strict";
 
 var three = require("../../chunks/three.js");
-var screenshot = require("../../chunks/screenshot.js");
 
 function _optionalChain(ops) {
   let lastAccessLHS = undefined;
@@ -100,15 +99,6 @@ Component({
     },
 
     initCanvas(canvas, helperCanvas) {
-      const platform = new screenshot.WechatPlatform(canvas);
-      this.platform = platform;
-      platform.enableDeviceOrientation("game");
-      three.PlatformManager.set(platform);
-
-      console.log(
-        three.PlatformManager.polyfill.window.innerWidth,
-        three.PlatformManager.polyfill.window.innerHeight
-      );
       console.log(canvas.width, canvas.height);
 
       console.log("canvas inited");
