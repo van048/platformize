@@ -1,91 +1,148 @@
 var THREE = require("../../chunks/three.js");
 var three = THREE;
 var screenshot = require("../../chunks/screenshot.js");
-var window
-var GLTFLoader = screenshot.GLTFLoader
+var window;
+var GLTFLoader = screenshot.GLTFLoader;
 
 // @ts-nocheck
 // This file is part of meshoptimizer library and is distributed under the terms of MIT License.
 // Copyright (C) 2016-2020, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
-var MeshoptDecoder = function(path1) {
+var MeshoptDecoder = (function (path1) {
   var setWasmPath = function setWasmPath(path) {
-      WXWebAssembly.instantiate(path, {
-      }).then(function(result) {
-          instance = result.instance;
-          instance.exports.__wasm_call_ctors();
-          readyResolve();
-      });
+    WXWebAssembly.instantiate(path, {}).then(function (result) {
+      instance = result.instance;
+      instance.exports.__wasm_call_ctors();
+      readyResolve();
+    });
   };
   var decode = function decode(fun, target, count, size, source, filter) {
-      var sbrk = instance.exports.sbrk;
-      var count4 = count + 3 & ~3; // pad for SIMD filter
-      var tp = sbrk(count4 * size);
-      var sp = sbrk(source.length);
-      var heap = new Uint8Array(instance.exports.memory.buffer);
-      heap.set(source, sp);
-      var res = fun(tp, count, size, sp, source.length);
-      if (res == 0 && filter) {
-          filter(tp, count4, size);
-      }
-      target.set(heap.subarray(tp, tp + count * size));
-      sbrk(tp - sbrk(0));
-      if (res != 0) {
-          throw new Error('Malformed buffer data: ' + res);
-      }
+    var sbrk = instance.exports.sbrk;
+    var count4 = (count + 3) & ~3; // pad for SIMD filter
+    var tp = sbrk(count4 * size);
+    var sp = sbrk(source.length);
+    var heap = new Uint8Array(instance.exports.memory.buffer);
+    heap.set(source, sp);
+    var res = fun(tp, count, size, sp, source.length);
+    if (res == 0 && filter) {
+      filter(tp, count4, size);
+    }
+    target.set(heap.subarray(tp, tp + count * size));
+    sbrk(tp - sbrk(0));
+    if (res != 0) {
+      throw new Error("Malformed buffer data: " + res);
+    }
   };
   // Built with clang version 11.0.0 (https://github.com/llvm/llvm-project.git 0160ad802e899c2922bc9b29564080c22eb0908c)
   // Built from meshoptimizer 0.14
-  if (typeof WXWebAssembly !== 'object') {
-      // This module requires WebAssembly to function
-      return {
-          supported: false
-      };
+  if (typeof WXWebAssembly !== "object") {
+    // This module requires WebAssembly to function
+    return {
+      supported: false,
+    };
   }
   var instance;
   var readyResolve;
-  var promise = new Promise(function(resovle) {
-      readyResolve = resovle;
+  var promise = new Promise(function (resovle) {
+    readyResolve = resovle;
   });
   var filters = {
-      // legacy index-based enums for glTF
-      0: '',
-      1: 'meshopt_decodeFilterOct',
-      2: 'meshopt_decodeFilterQuat',
-      3: 'meshopt_decodeFilterExp',
-      // string-based enums for glTF
-      NONE: '',
-      OCTAHEDRAL: 'meshopt_decodeFilterOct',
-      QUATERNION: 'meshopt_decodeFilterQuat',
-      EXPONENTIAL: 'meshopt_decodeFilterExp'
+    // legacy index-based enums for glTF
+    0: "",
+    1: "meshopt_decodeFilterOct",
+    2: "meshopt_decodeFilterQuat",
+    3: "meshopt_decodeFilterExp",
+    // string-based enums for glTF
+    NONE: "",
+    OCTAHEDRAL: "meshopt_decodeFilterOct",
+    QUATERNION: "meshopt_decodeFilterQuat",
+    EXPONENTIAL: "meshopt_decodeFilterExp",
   };
   var decoders = {
-      // legacy index-based enums for glTF
-      0: 'meshopt_decodeVertexBuffer',
-      1: 'meshopt_decodeIndexBuffer',
-      2: 'meshopt_decodeIndexSequence',
-      // string-based enums for glTF
-      ATTRIBUTES: 'meshopt_decodeVertexBuffer',
-      TRIANGLES: 'meshopt_decodeIndexBuffer',
-      INDICES: 'meshopt_decodeIndexSequence'
+    // legacy index-based enums for glTF
+    0: "meshopt_decodeVertexBuffer",
+    1: "meshopt_decodeIndexBuffer",
+    2: "meshopt_decodeIndexSequence",
+    // string-based enums for glTF
+    ATTRIBUTES: "meshopt_decodeVertexBuffer",
+    TRIANGLES: "meshopt_decodeIndexBuffer",
+    INDICES: "meshopt_decodeIndexSequence",
   };
   return {
-      setWasmPath: setWasmPath,
-      ready: promise,
-      supported: true,
-      decodeVertexBuffer: function decodeVertexBuffer(target, count, size, source, filter) {
-          decode(instance.exports.meshopt_decodeVertexBuffer, target, count, size, source, instance.exports[filters[filter]]);
-      },
-      decodeIndexBuffer: function decodeIndexBuffer(target, count, size, source) {
-          decode(instance.exports.meshopt_decodeIndexBuffer, target, count, size, source);
-      },
-      decodeIndexSequence: function decodeIndexSequence(target, count, size, source) {
-          decode(instance.exports.meshopt_decodeIndexSequence, target, count, size, source);
-      },
-      decodeGltfBuffer: function decodeGltfBuffer(target, count, size, source, mode, filter) {
-          decode(instance.exports[decoders[mode]], target, count, size, source, instance.exports[filters[filter]]);
-      }
+    setWasmPath: setWasmPath,
+    ready: promise,
+    supported: true,
+    decodeVertexBuffer: function decodeVertexBuffer(
+      target,
+      count,
+      size,
+      source,
+      filter
+    ) {
+      decode(
+        instance.exports.meshopt_decodeVertexBuffer,
+        target,
+        count,
+        size,
+        source,
+        instance.exports[filters[filter]]
+      );
+    },
+    decodeIndexBuffer: function decodeIndexBuffer(target, count, size, source) {
+      decode(
+        instance.exports.meshopt_decodeIndexBuffer,
+        target,
+        count,
+        size,
+        source
+      );
+    },
+    decodeIndexSequence: function decodeIndexSequence(
+      target,
+      count,
+      size,
+      source
+    ) {
+      decode(
+        instance.exports.meshopt_decodeIndexSequence,
+        target,
+        count,
+        size,
+        source
+      );
+    },
+    decodeGltfBuffer: function decodeGltfBuffer(
+      target,
+      count,
+      size,
+      source,
+      mode,
+      filter
+    ) {
+      decode(
+        instance.exports[decoders[mode]],
+        target,
+        count,
+        size,
+        source,
+        instance.exports[filters[filter]]
+      );
+    },
   };
-}();
+})();
+
+let cameraInitPos;
+let cameraInitPosOn = new THREE.Vector3(0, 0.6, 3.6);
+let cameraInitTargetOn = new THREE.Vector3(0, 0.23568405126528758, 0);
+let cameraInitTarget;
+let cameraAnimForwardHome = {
+  startPos: null,
+  endPos: null,
+  startTarget: null,
+  endTarget: null,
+  startLight: null,
+  endLight: null,
+};
+let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338)
 
 // 调试开关
 const debugObj = {
@@ -97,23 +154,23 @@ const debugObj = {
   axesHelper: false,
   light: false,
   // mockStatus: isPC(),
-  mockStatus: false,
+  mockStatus: true,
   mockStatusObj: {
-    power: 'on',
+    power: "on",
     gear: 1,
     ud_swing_angle: 60,
     // swing_direction: 'ud',
-    swing_direction: 'ud',
-    swing: 'off',
+    swing_direction: "ud",
+    swing: "off",
     // swing: 'off',
-    lr_diy_swing: 'off',
+    lr_diy_swing: "off",
     lr_diy_down_percent: 28,
     lr_diy_up_percent: 100,
     display_left_angle: 86,
     swing_angle: 60,
     target_angle: (30 / 120) * 100,
   },
-}
+};
 
 module.exports = Behavior({
   behaviors: [],
@@ -130,70 +187,131 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    /**
+     * 使用模型里的相机作为场景的相机
+     */
+    initCameraInModel(child) {
+      const aspectRatio = window.innerWidth / window.innerHeight;
+      console.log("initCameraInModel", child);
+      // 删除现有camera
+      if (this.camera) this.camera.removeFromParent();
+
+      const camera = child;
+      camera.far = 39;
+      // 手动调
+      camera.fov += 5;
+      camera.position.y -= 0.1;
+      // 来自blender
+      // camera.position.set(2.18837, 0.69065, -2.23247 * -1)
+      // camera.lookAt(camera.position.x,-1,camera.position.z)
+      // rotateObjectLocal(camera, 'X', -95.8632/180*Math.PI)
+      // rotateObjectLocal(camera, 'Z', 180.017/180*Math.PI*-1)
+      // rotateObjectLocal(camera, 'Y', 226.09/180*Math.PI)
+      // Camera frustum aspect ratio, usually the canvas width / canvas height
+      camera.aspect = aspectRatio;
+      this.camera = camera;
+
+      // 初始化
+      {
+        if (this.statusData.power == "off") {
+          cameraInitPos = cameraInitPosOff.clone();
+          cameraInitTarget = cameraInitTargetOff.clone();
+        } else {
+          cameraInitPos = cameraInitPosOn.clone();
+          cameraInitTarget = cameraInitTargetOn.clone();
+        }
+        this.camera.position.copy(cameraInitPos);
+        this.camera.lookAt(cameraInitTarget);
+
+        cameraAnimForwardHome.startPos = cameraInitPosOn.clone();
+        cameraAnimForwardHome.endPos = cameraInitPosOff
+          .clone()
+          .add(
+            new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1).sub(
+              new THREE.Vector3(2.18837, 0.69065, -2.23247 * -1)
+            )
+          );
+        let y = 0.6;
+        cameraAnimForwardHome.endPos.x = 0;
+        cameraAnimForwardHome.endPos.y = y;
+        cameraAnimForwardHome.endPos.z -= 0.4;
+        cameraAnimForwardHome.startTarget = cameraInitTargetOn.clone();
+        cameraAnimForwardHome.endTarget = new THREE.Vector3(0, y, 0);
+      }
+
+      // Updates the camera projection matrix. Must be called after any change of parameters.
+      this.camera.updateProjectionMatrix();
+    },
+    showLoading(message) {
+      wx.showLoading({ title: message });
+    },
+    hideLoading() {
+      wx.hideLoading();
+    },
     // 加载模型
     loadModel() {
-      // this.showLoading('加载模型中')
+      this.showLoading("加载模型中");
 
       // 创建GLTFLoader实例，用于加载和解析glTF/glb格式的3D模型
-      const loaderGLB = new GLTFLoader()
-      MeshoptDecoder.setWasmPath('/decoder_base.wasm');
+      const loaderGLB = new GLTFLoader();
+      MeshoptDecoder.setWasmPath("/decoder_base.wasm");
       // 设置MeshoptDecoder用于解码通过Meshopt压缩后的模型数据
-      loaderGLB.setMeshoptDecoder(MeshoptDecoder)
+      loaderGLB.setMeshoptDecoder(MeshoptDecoder);
       // 加载家电产品的模型文件
       loaderGLB.load(
         // './assets/models/0xFA/GDG24FG_decimate.glb',
-        'https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/GDG24FG_decimate.glb',
+        "https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/GDG24FG_decimate.glb",
         (obj) => {
-          this.model = obj.scene
+          this.model = obj.scene;
           // 将模型文件添加到场景中
-          this.scene.add(this.model)
+          this.scene.add(this.model);
 
-          this.initCameraInModel(this.scene.getObjectByName('摄像机'))
-          this.initLightInModel(this.scene.getObjectByName('点光'))
+          this.initCameraInModel(this.scene.getObjectByName("摄像机"));
+          this.initLightInModel(this.scene.getObjectByName("点光"));
 
           // 所有对象
-          this.readGroup()
+          this.readGroup();
           // 具体业务代码
-          this.initFanLeafGroup()
-          this.initUpDownGroup()
-          this.initLrGroup()
+          this.initFanLeafGroup();
+          this.initUpDownGroup();
+          this.initLrGroup();
 
-          this.initColor()
+          this.initColor();
           // 具体业务代码
 
-          this.animate()
-          this.animateCal()
-          this.animateUpdate()
+          this.animate();
+          this.animateCal();
+          this.animateUpdate();
 
-          let endTime = new Date().getTime()
-          console.warn('加载时间: ', (endTime - this.startTime) / 1000)
+          let endTime = new Date().getTime();
+          console.warn("加载时间: ", (endTime - this.startTime) / 1000);
           this.debugText = `加载时间: <br>${
             (endTime - this.startTime) / 1000
-          }秒`
-          this.hideLoading()
-          this.threeLoaded = true
-          this.tryTellThreeLoaded()
+          }秒`;
+          this.hideLoading();
+          this.threeLoaded = true;
+          this.tryTellThreeLoaded();
         },
         (event) => {
           // 监听进度
-          let totalSize = event.total
-          let loadedSize = event.loaded
-          let percent = ((loadedSize / totalSize) * 100).toFixed(2) + '%'
-          this.loadingOptions.text = '加载模型中(' + percent + ')'
-          if (percent === '100.00%') {
-            this.loadingOptions.text = '正在创建场景'
+          let totalSize = event.total;
+          let loadedSize = event.loaded;
+          let percent = ((loadedSize / totalSize) * 100).toFixed(2) + "%";
+          this.loadingOptions.text = "加载模型中(" + percent + ")";
+          if (percent === "100.00%") {
+            this.loadingOptions.text = "正在创建场景";
           }
         },
         (error) => {
-          console.error(error)
+          console.error(error);
         }
-      )
+      );
     },
     onWindowResize() {
-      this.camera.aspect = window.innerWidth / window.innerHeight
-      this.camera.updateProjectionMatrix()
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
 
-      this.renderer.setSize(window.innerWidth, window.innerHeight)
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     initRender() {
       this.renderer = new THREE.WebGL1Renderer({
@@ -201,12 +319,36 @@ module.exports = Behavior({
         antialias: true, // 启用抗锯齿功能，使渲染的边缘更平滑，减少锯齿状的边缘
       });
     },
+    // 状态更新
+    updateStatus(statusData) {
+      this.debugText = JSON.stringify(
+        {
+          // power: statusData.power,
+          swing_direction: statusData.swing_direction,
+          ud_swing_angle: statusData.ud_swing_angle,
+          swing: statusData.swing,
+          swing_angle: statusData.swing_angle,
+          display_left_angle: statusData.display_left_angle,
+          lr_diy_down_percent: statusData.lr_diy_down_percent,
+          lr_diy_up_percent: statusData.lr_diy_up_percent,
+          lr_diy_swing: statusData.lr_diy_swing,
+          target_angle: statusData.target_angle,
+          // gear: statusData.gear,
+        },
+        null,
+        2
+      );
+      if (statusData.display_left_angle == 255) {
+        statusData.display_left_angle = statusData.swing_angle;
+      }
+      this.statusData = statusData;
+    },
     threeMounted(canvas) {
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
       platform.enableDeviceOrientation("game");
       three.PlatformManager.set(platform);
-      window = three.PlatformManager.polyfill.window
+      window = three.PlatformManager.polyfill.window;
 
       console.log(
         three.PlatformManager.polyfill.window.innerWidth,
@@ -253,9 +395,9 @@ module.exports = Behavior({
 
       // this.initOrbitControls();
 
-      // if (debugObj.mockStatus) {
-      //   this.updateStatus(debugObj.mockStatusObj);
-      // }
+      if (debugObj.mockStatus) {
+        this.updateStatus(debugObj.mockStatusObj);
+      }
 
       window.addEventListener("resize", this.onWindowResize);
     },
