@@ -143,7 +143,10 @@ let cameraAnimForwardHome = {
   endLight: null,
 };
 let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338);
+
 let light;
+
+const fanLeafGroupMatrix = new THREE.Matrix4();
 
 // 调试开关
 const debugObj = {
@@ -189,6 +192,48 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    changePivot(offset, group) {
+      group.position.set(
+        group.position.x + offset.x,
+        group.position.y + offset.y,
+        group.position.z + offset.z
+      );
+      group.children.forEach((child) => {
+        child.position.set(
+          child.position.x - offset.x,
+          child.position.y - offset.y,
+          child.position.z - offset.z
+        );
+      });
+    },
+    initFanLeafGroup() {
+      this.fanLeafGroup = this.group.find(
+        (it) => it.desc == "扇叶"
+      ).object_list;
+      this.fanLeafGroup.matrixAutoUpdate = false; // 禁用自动更新矩阵
+      let offset = new THREE.Vector3(
+        0.0002563020907130481,
+        0.8979188716086597,
+        0.1228891151791681
+      );
+      this.changePivot(offset, this.fanLeafGroup);
+      this.fanLeafGroup.updateMatrix();
+
+      // let geometry = new THREE.SphereGeometry(0.01, 32, 16)
+      // const material = new THREE.MeshBasicMaterial({
+      //   color: 0xffff00,
+      //   transparent: true,
+      //   opacity: 0,
+      // })
+      // particleCenterSphere = new THREE.Mesh(geometry, material)
+      // geometry = geometry.clone()
+      // particleNormalSphere = new THREE.Mesh(geometry, material)
+      // particleNormalSphere.position.z = particleNormalSphere.position.z + 0.4
+      // this.fanLeafGroup.add(particleCenterSphere)
+      // this.fanLeafGroup.add(particleNormalSphere)
+
+      fanLeafGroupMatrix.copy(this.fanLeafGroup.matrix);
+    },
     readGroup() {
       let children = [];
       // 遍历模型的每个子对象，将其添加到children数组中
@@ -350,7 +395,7 @@ module.exports = Behavior({
         // './assets/models/0xFA/GDG24FG_decimate.glb',
         "https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/GDG24FG_decimate.glb",
         (obj) => {
-          const that = this
+          const that = this;
           wx.request({
             url: "https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/group.json", // 请替换为实际的 URL
             success: function (res) {
