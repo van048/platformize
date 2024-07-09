@@ -137,6 +137,11 @@ var localStorage = {
 let cameraInitPos;
 let cameraInitPosOn = new THREE.Vector3(0, 0.6, 3.6);
 let cameraInitTargetOn = new THREE.Vector3(0, 0.23568405126528758, 0);
+let cameraInitTargetOff = new THREE.Vector3(
+  -0.0962711995010399,
+  0.23568405126528758,
+  0
+)
 let cameraInitTarget;
 let cameraAnimForwardHome = {
   startPos: null,
@@ -180,7 +185,7 @@ const debugObj = {
   // mockStatus: isPC(),
   mockStatus: true,
   mockStatusObj: {
-    power: "on",
+    power: "off",
     gear: 1,
     ud_swing_angle: 60,
     // swing_direction: 'ud',
@@ -212,6 +217,28 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    resetLrDegAnim() {
+      // 复位
+      if (Math.abs(lrDeg) > 0.01) {
+        const up = -(Math.PI / 180) * (1.2 * 100 - 60)
+        const down = -(Math.PI / 180) * (1.2 * 0 - 60)
+        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag))
+        if (lrDeg <= up) lrDirectionFlag = 1
+        else if (lrDeg >= down) lrDirectionFlag = -1
+      } else {
+        lrDeg = 0
+      }
+    },
+    resetUdDegAnim() {
+      // 复位
+      if (Math.abs(udDeg) > 0.01) {
+        if (udDeg >= 0) udDirectionFlag = -1
+        else if (udDeg <= 0) udDirectionFlag = 1
+        udDeg = udDeg + upDownSpeed * udDirectionFlag
+      } else {
+        udDeg = 0
+      }
+    },
     tryTellThreeLoaded() {
       if (this.threeLoaded) {
         // this.postDataToWeex({
