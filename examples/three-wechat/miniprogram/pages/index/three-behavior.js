@@ -1,7 +1,7 @@
 var THREE = require("../../chunks/three.js");
 var three = THREE;
 var screenshot = require("../../chunks/screenshot.js");
-var window;
+var window, requestAnimationFrame;
 var GLTFLoader = screenshot.GLTFLoader;
 // @ts-nocheck
 // This file is part of meshoptimizer library and is distributed under the terms of MIT License.
@@ -201,6 +201,43 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    // 循环渲染
+    animate() {
+      //requestAnimationFrame循环调用的函数中调用方法update(),来刷新时间
+      this.stats && this.stats.update();
+      // 获取帧间隔时间
+      const delta = this.clock.getDelta();
+
+      const that = this
+      requestAnimationFrame(()=>{
+        that.animate()
+      });
+
+      if (debugObj.fps) {
+        if (delta > 0) {
+          // 增加帧数计数器
+          fpsCount++;
+          // 根据帧间隔时间计算FPS
+          fpsTotal += Math.round(1 / delta);
+          if (fpsCount == 60) {
+            // 计算平均FPS
+            this.fps = Math.round(fpsTotal / 60);
+            // this.postDataToWeex({
+            //   type: 'fpsUpdate',
+            //   value: this.fps,
+            // })
+            // 如果平均FPS低于60，则输出警告信息
+            if (this.fps < 50) console.warn("fps low " + this.fps);
+            // 重置帧数计数器和FPS总数
+            fpsCount = 0;
+            fpsTotal = 0;
+          }
+        }
+      }
+
+      // 重新渲染场景并显示到H5页面中
+      this.renderer.render(this.scene, this.camera);
+    },
     convertColor(colorString) {
       // 移除井号并转换为小写
       colorString = colorString.replace("#", "").toLowerCase();
@@ -210,7 +247,7 @@ module.exports = Behavior({
     // 初始化自定义外观，如果有的话
     initColor() {
       // TODO
-      this.lookPanel = this.data.lookPanel
+      this.lookPanel = this.data.lookPanel;
 
       let color = localStorage.getItem(customColorKey) || "#FFFFFF";
       light.color = this.convertColor(color);
@@ -533,11 +570,15 @@ module.exports = Behavior({
       this.statusData = statusData;
     },
     threeMounted(canvas) {
+      this.clock = new THREE.Clock();
+
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
       platform.enableDeviceOrientation("game");
       three.PlatformManager.set(platform);
       window = three.PlatformManager.polyfill.window;
+      requestAnimationFrame =
+        three.PlatformManager.polyfill.requestAnimationFrame;
 
       console.log(
         three.PlatformManager.polyfill.window.innerWidth,
