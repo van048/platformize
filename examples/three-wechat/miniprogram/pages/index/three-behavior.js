@@ -3,7 +3,6 @@ var three = THREE;
 var screenshot = require("../../chunks/screenshot.js");
 var window;
 var GLTFLoader = screenshot.GLTFLoader;
-
 // @ts-nocheck
 // This file is part of meshoptimizer library and is distributed under the terms of MIT License.
 // Copyright (C) 2016-2020, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
@@ -129,6 +128,11 @@ var MeshoptDecoder = (function (path1) {
     },
   };
 })();
+var localStorage = {
+  getItem: function (key) {
+    return wx.getStorageSync(key);
+  },
+};
 
 let cameraInitPos;
 let cameraInitPosOn = new THREE.Vector3(0, 0.6, 3.6);
@@ -149,6 +153,9 @@ let light;
 const fanLeafGroupMatrix = new THREE.Matrix4();
 const upDownGroupMatrix = new THREE.Matrix4();
 const lrGroupMatrix = new THREE.Matrix4();
+
+// 本地保存自定义外观的key
+let customColorKey = "GDG24FG_customColor";
 
 // 调试开关
 const debugObj = {
@@ -186,9 +193,29 @@ module.exports = Behavior({
     },
   },
   data: {
+    lookPanel: {
+      show: false,
+      options: ["#B4E7F0", "#93EBC0", "#E9DD90", "#FFFFFF"],
+      activeOption: "#FFFFFF",
+    },
   },
   attached: function () {},
   methods: {
+    convertColor(colorString) {
+      // 移除井号并转换为小写
+      colorString = colorString.replace("#", "").toLowerCase();
+      // 将16进制字符串转换为整数
+      return new THREE.Color(parseInt(colorString, 16));
+    },
+    // 初始化自定义外观，如果有的话
+    initColor() {
+      // TODO
+      this.lookPanel = this.data.lookPanel
+
+      let color = localStorage.getItem(customColorKey) || "#FFFFFF";
+      light.color = this.convertColor(color);
+      this.lookPanel.activeOption = color;
+    },
     initLrGroup() {
       this.lrGroupObj = this.group.find((it) => it.desc == "左右摇柄");
       this.lrGroup = this.lrGroupObj.object_list;
