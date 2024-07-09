@@ -143,6 +143,7 @@ let cameraAnimForwardHome = {
   endLight: null,
 };
 let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338)
+let light
 
 // 调试开关
 const debugObj = {
@@ -187,6 +188,54 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    /**
+     * 使用模型里的灯光作为灯光
+     */
+    initLightInModel(child) {
+      console.log('initLightInModel', child)
+
+      // 与摄像机解绑，拉到与摄像机统一层级，方便控制
+      child.removeFromParent()
+      this.scene.add(child)
+
+      // 数据来自blender文件
+      const localV = new THREE.Vector3(-1.02732, 1.1113, -1.48945 * -1)
+      const cV = new THREE.Vector3(2.18837, 0.69065, -2.23247 * -1)
+      const reV = localV.add(cV)
+      child.position.set(reV.x, reV.y, reV.z)
+
+      // 让灯光照着摄像机的目标方向
+      child.lookAt(cameraInitTarget)
+
+      // 手动调
+      // The light's luminous intensity measured in candela (cd). Default is 1.
+      child.intensity *= 80
+      // this.scene.add(child)
+      light = child
+
+      // 初始化
+      {
+        cameraAnimForwardHome.startLight = light.position.clone()
+        // 先保持跟相机相对静止
+        cameraAnimForwardHome.endLight = cameraAnimForwardHome.endPos
+          .clone()
+          .add(
+            cameraAnimForwardHome.startLight
+              .clone()
+              .sub(cameraAnimForwardHome.startPos)
+          )
+      }
+
+      if (debugObj.light) {
+        const sphereSize = 1
+        const pointLightHelper = new THREE.PointLightHelper(
+          child,
+          sphereSize,
+          0xff0000
+        )
+        this.scene.add(pointLightHelper)
+      }
+    },
     /**
      * 使用模型里的相机作为场景的相机
      */
