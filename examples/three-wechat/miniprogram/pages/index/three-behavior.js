@@ -147,7 +147,8 @@ let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338);
 let light;
 
 const fanLeafGroupMatrix = new THREE.Matrix4();
-const upDownGroupMatrix = new THREE.Matrix4()
+const upDownGroupMatrix = new THREE.Matrix4();
+const lrGroupMatrix = new THREE.Matrix4();
 
 // 调试开关
 const debugObj = {
@@ -185,28 +186,32 @@ module.exports = Behavior({
     },
   },
   data: {
-    scene: null,
-    renderer: null,
-    platform: null,
-    model: null,
-    group: null,
   },
   attached: function () {},
   methods: {
+    initLrGroup() {
+      this.lrGroupObj = this.group.find((it) => it.desc == "左右摇柄");
+      this.lrGroup = this.lrGroupObj.object_list;
+      this.lrGroup.matrixAutoUpdate = false; // 禁用自动更新矩阵
+      let offset = new THREE.Vector3(0, 0.8984388716086597, 0.1020891151791681);
+      this.changePivot(offset, this.lrGroup);
+      this.lrGroup.updateMatrix();
+      lrGroupMatrix.copy(this.lrGroup.matrix);
+    },
     initUpDownGroup() {
       this.upDownGroupObj = this.group.find(
-        (it) => it.desc == '上下摇头除去扇叶'
-      )
-      this.upDownGroup = this.upDownGroupObj.object_list
-      this.upDownGroup.matrixAutoUpdate = false // 禁用自动更新矩阵
+        (it) => it.desc == "上下摇头除去扇叶"
+      );
+      this.upDownGroup = this.upDownGroupObj.object_list;
+      this.upDownGroup.matrixAutoUpdate = false; // 禁用自动更新矩阵
       let offset = new THREE.Vector3(
         0.0002563020907130481,
         0.8984388716086597,
         0.1061891151791681
-      )
-      this.changePivot(offset, this.upDownGroup)
-      this.upDownGroup.updateMatrix()
-      upDownGroupMatrix.copy(this.upDownGroup.matrix)
+      );
+      this.changePivot(offset, this.upDownGroup);
+      this.upDownGroup.updateMatrix();
+      upDownGroupMatrix.copy(this.upDownGroup.matrix);
     },
     changePivot(offset, group) {
       group.position.set(
