@@ -153,6 +153,11 @@ let light;
 const fanLeafGroupMatrix = new THREE.Matrix4();
 const upDownGroupMatrix = new THREE.Matrix4();
 const lrGroupMatrix = new THREE.Matrix4();
+let fanLeafRotation = 0;
+const fanLeafRotateSpeed = 0.5; // 1档的时候1s转圈数
+let udDeg = 0;
+const upDownSpeed = 0.01;
+let udDirectionFlag = 1
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -201,6 +206,103 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    calLrDeg() {
+      if (this.statusData.power == 'off') {
+        this.resetLrDegAnim()
+        return
+      }
+      if (this.currentTransformType == 'ud') {
+        lrDeg = 0
+        return
+      }
+      if (this.seeingSwingRange) {
+        lrDeg =
+          -(Math.PI / 180) *
+          (1.2 * this.swingChangeSettingObj.target_angle - 60)
+      } else if (this.seeingSwingRange2) {
+        const up =
+          -(Math.PI / 180) *
+          (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60)
+        const down =
+          -(Math.PI / 180) *
+          (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60)
+        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag))
+        if (lrDeg <= up) lrDirectionFlag = 1
+        else if (lrDeg >= down) lrDirectionFlag = -1
+      } else {
+        if (this.isLrSwinging) {
+          const up =
+            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_up_percent - 60)
+          const down =
+            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_down_percent - 60)
+          lrDeg = Math.min(
+            down,
+            Math.max(up, lrDeg + lrSpeed * lrDirectionFlag)
+          )
+          if (lrDeg <= up) lrDirectionFlag = 1
+          else if (lrDeg >= down) lrDirectionFlag = -1
+        } else if (this.isLrFocus) {
+          lrDeg = -(Math.PI / 180) * (1.2 * this.statusData.target_angle - 60)
+        } else {
+          // lrDeg = 0
+        }
+      }
+    },
+    calUdDeg() {
+      if (this.statusData.power == "off") {
+        this.resetUdDegAnim();
+        return;
+      }
+      if (this.seeingSwingRange) {
+        udDeg = 0;
+        return;
+      }
+      if (this.seeingSwingRange2) {
+        udDeg = 0;
+        return;
+      }
+      if (
+        this.statusData.power == "on" &&
+        (this.statusData.swing_direction == "ud" ||
+          this.statusData.swing_direction == "udlr")
+      ) {
+        const range = ((Math.PI / 180) * this.statusData.ud_swing_angle) / 2;
+        if (range != 0) {
+          udDeg = Math.max(
+            -range,
+            Math.min(range, udDeg + upDownSpeed * udDirectionFlag)
+          );
+          if (udDeg >= range) udDirectionFlag = -1;
+          else if (udDeg <= -range) udDirectionFlag = 1;
+        }
+      } else {
+        // udDeg = 0
+      }
+    },
+    calFanLeafRotation(delta) {
+      if (this.statusData.power == "on" && this.statusData.gear) {
+        // 扇叶绕z轴旋转
+        fanLeafRotation +=
+          fanLeafRotateSpeed * this.statusData.gear * Math.PI * 2 * delta;
+      }
+    },
+    animateCal() {
+      // 获取帧间隔时间
+      const delta = this.clockCal.getDelta();
+
+      // #region 美居插件端数据与模型组件绑定
+      this.calFanLeafRotation(delta);
+
+      this.calUdDeg();
+
+      this.calLrDeg();
+      // #endregion
+
+      const that = this
+      requestAnimationFrame(()=>{
+        that.animateCal()
+      });
+    },
     // 循环渲染
     animate() {
       //requestAnimationFrame循环调用的函数中调用方法update(),来刷新时间
@@ -208,9 +310,9 @@ module.exports = Behavior({
       // 获取帧间隔时间
       const delta = this.clock.getDelta();
 
-      const that = this
-      requestAnimationFrame(()=>{
-        that.animate()
+      const that = this;
+      requestAnimationFrame(() => {
+        that.animate();
       });
 
       if (debugObj.fps) {
@@ -571,6 +673,7 @@ module.exports = Behavior({
     },
     threeMounted(canvas) {
       this.clock = new THREE.Clock();
+      this.clockCal = new THREE.Clock();
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
