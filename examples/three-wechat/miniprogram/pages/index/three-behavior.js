@@ -157,7 +157,13 @@ let fanLeafRotation = 0;
 const fanLeafRotateSpeed = 0.5; // 1档的时候1s转圈数
 let udDeg = 0;
 const upDownSpeed = 0.01;
-let udDirectionFlag = 1
+let udDirectionFlag = 1;
+let lrDeg = 0;
+const calMatrix = new THREE.Matrix4();
+const calMatrix_1 = new THREE.Matrix4();
+const calVector = new THREE.Vector3();
+const calVector_1 = new THREE.Vector3();
+const calQuaternion = new THREE.Quaternion();
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -206,43 +212,113 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    updateLrGroup() {
+      if (!this.lrGroup) return;
+      calMatrix.copy(lrGroupMatrix);
+      calMatrix.multiply(calMatrix_1.identity().makeRotationY(lrDeg));
+      this.lrGroup.matrix.copy(calMatrix);
+    },
+    updateUpDownGroup() {
+      if (!this.upDownGroup) return;
+      // 初始矩阵
+      calMatrix.copy(upDownGroupMatrix);
+      // 绕自身x轴旋转
+      calMatrix.multiply(calMatrix_1.identity().makeRotationX(udDeg));
+      // 绕原来y轴旋转
+      calMatrix.multiply(
+        calMatrix_1
+          .identity()
+          .makeRotationFromQuaternion(
+            calQuaternion
+              .identity()
+              .setFromAxisAngle(
+                calVector
+                  .set(0, 1, 0)
+                  .applyAxisAngle(calVector_1.set(1, 0, 0), -udDeg),
+                lrDeg
+              )
+          )
+      );
+      // 应用matrix
+      this.upDownGroup.matrix.copy(calMatrix);
+    },
+    updateFanLeafGroup() {
+      if (!this.fanLeafGroup) return;
+      // 在初始矩阵基础上进行变换
+      calMatrix.copy(fanLeafGroupMatrix);
+      // 绕自身x轴旋转
+      calMatrix.multiply(calMatrix_1.identity().makeRotationX(udDeg));
+      // 绕原来y轴旋转
+      calMatrix.multiply(
+        calMatrix_1
+          .identity()
+          .makeRotationFromQuaternion(
+            calQuaternion
+              .identity()
+              .setFromAxisAngle(
+                calVector
+                  .set(0, 1, 0)
+                  .applyAxisAngle(calVector_1.set(1, 0, 0), -udDeg),
+                lrDeg
+              )
+          )
+      );
+      // 绕自身z轴旋转
+      calMatrix.multiply(calMatrix_1.identity().makeRotationZ(fanLeafRotation));
+      // 将变换后的矩阵应用到Group，下一次渲染后界面更新
+      this.fanLeafGroup.matrix.copy(calMatrix);
+    },
+    animateUpdate() {
+      // #region 美居插件端数据与模型组件绑定
+      this.updateLrGroup();
+
+      this.updateUpDownGroup();
+
+      this.updateFanLeafGroup();
+      // #endregion
+
+      const that = this;
+      requestAnimationFrame(() => {
+        that.animateUpdate;
+      });
+    },
     calLrDeg() {
-      if (this.statusData.power == 'off') {
-        this.resetLrDegAnim()
-        return
+      if (this.statusData.power == "off") {
+        this.resetLrDegAnim();
+        return;
       }
-      if (this.currentTransformType == 'ud') {
-        lrDeg = 0
-        return
+      if (this.currentTransformType == "ud") {
+        lrDeg = 0;
+        return;
       }
       if (this.seeingSwingRange) {
         lrDeg =
           -(Math.PI / 180) *
-          (1.2 * this.swingChangeSettingObj.target_angle - 60)
+          (1.2 * this.swingChangeSettingObj.target_angle - 60);
       } else if (this.seeingSwingRange2) {
         const up =
           -(Math.PI / 180) *
-          (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60)
+          (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60);
         const down =
           -(Math.PI / 180) *
-          (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60)
-        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag))
-        if (lrDeg <= up) lrDirectionFlag = 1
-        else if (lrDeg >= down) lrDirectionFlag = -1
+          (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60);
+        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag));
+        if (lrDeg <= up) lrDirectionFlag = 1;
+        else if (lrDeg >= down) lrDirectionFlag = -1;
       } else {
         if (this.isLrSwinging) {
           const up =
-            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_up_percent - 60)
+            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_up_percent - 60);
           const down =
-            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_down_percent - 60)
+            -(Math.PI / 180) * (1.2 * this.statusData.lr_diy_down_percent - 60);
           lrDeg = Math.min(
             down,
             Math.max(up, lrDeg + lrSpeed * lrDirectionFlag)
-          )
-          if (lrDeg <= up) lrDirectionFlag = 1
-          else if (lrDeg >= down) lrDirectionFlag = -1
+          );
+          if (lrDeg <= up) lrDirectionFlag = 1;
+          else if (lrDeg >= down) lrDirectionFlag = -1;
         } else if (this.isLrFocus) {
-          lrDeg = -(Math.PI / 180) * (1.2 * this.statusData.target_angle - 60)
+          lrDeg = -(Math.PI / 180) * (1.2 * this.statusData.target_angle - 60);
         } else {
           // lrDeg = 0
         }
@@ -298,9 +374,9 @@ module.exports = Behavior({
       this.calLrDeg();
       // #endregion
 
-      const that = this
-      requestAnimationFrame(()=>{
-        that.animateCal()
+      const that = this;
+      requestAnimationFrame(() => {
+        that.animateCal();
       });
     },
     // 循环渲染
