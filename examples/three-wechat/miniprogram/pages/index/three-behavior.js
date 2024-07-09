@@ -142,8 +142,8 @@ let cameraAnimForwardHome = {
   startLight: null,
   endLight: null,
 };
-let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338)
-let light
+let cameraInitPosOff = new THREE.Vector3(2.45431651, 0.578276529, 2.92998338);
+let light;
 
 // 调试开关
 const debugObj = {
@@ -185,37 +185,76 @@ module.exports = Behavior({
     renderer: null,
     platform: null,
     model: null,
+    group: null,
   },
   attached: function () {},
   methods: {
+    readGroup() {
+      let children = [];
+      // 遍历模型的每个子对象，将其添加到children数组中
+      this.model.traverse((child) => {
+        children.push(child);
+      });
+      // console.log(JSON.stringify(children.map((it) => it.name)))
+      console.log("原有对象数目", children.length);
+      this.group.forEach((g) => {
+        if (g.desc === "invisible") {
+          // console.log(JSON.stringify(g.name_list))
+          g.name_list.forEach((name) => {
+            let o = children.find((it) => it.name == name);
+            if (o) {
+              o.visible = false;
+            }
+          });
+        } else {
+          if (!g["object_list"]) {
+            g["object_list"] = new THREE.Group();
+          }
+          // 按照JSON的分组信息，将相应的对象添加到一个Group对象中
+          g.name_list.forEach((name) => {
+            let o = children.find((it) => it.name == name);
+            if (o) {
+              g["object_list"].add(o);
+            }
+          });
+          // 将分组添加到场景
+          this.scene.add(g["object_list"]);
+        }
+      });
+      let count = 0;
+      this.scene.traverse((child) => {
+        if (child.visible) count++;
+      });
+      console.log("隐藏后可见对象数目", count);
+    },
     /**
      * 使用模型里的灯光作为灯光
      */
     initLightInModel(child) {
-      console.log('initLightInModel', child)
+      console.log("initLightInModel", child);
 
       // 与摄像机解绑，拉到与摄像机统一层级，方便控制
-      child.removeFromParent()
-      this.scene.add(child)
+      child.removeFromParent();
+      this.scene.add(child);
 
       // 数据来自blender文件
-      const localV = new THREE.Vector3(-1.02732, 1.1113, -1.48945 * -1)
-      const cV = new THREE.Vector3(2.18837, 0.69065, -2.23247 * -1)
-      const reV = localV.add(cV)
-      child.position.set(reV.x, reV.y, reV.z)
+      const localV = new THREE.Vector3(-1.02732, 1.1113, -1.48945 * -1);
+      const cV = new THREE.Vector3(2.18837, 0.69065, -2.23247 * -1);
+      const reV = localV.add(cV);
+      child.position.set(reV.x, reV.y, reV.z);
 
       // 让灯光照着摄像机的目标方向
-      child.lookAt(cameraInitTarget)
+      child.lookAt(cameraInitTarget);
 
       // 手动调
       // The light's luminous intensity measured in candela (cd). Default is 1.
-      child.intensity *= 80
+      child.intensity *= 80;
       // this.scene.add(child)
-      light = child
+      light = child;
 
       // 初始化
       {
-        cameraAnimForwardHome.startLight = light.position.clone()
+        cameraAnimForwardHome.startLight = light.position.clone();
         // 先保持跟相机相对静止
         cameraAnimForwardHome.endLight = cameraAnimForwardHome.endPos
           .clone()
@@ -223,17 +262,17 @@ module.exports = Behavior({
             cameraAnimForwardHome.startLight
               .clone()
               .sub(cameraAnimForwardHome.startPos)
-          )
+          );
       }
 
       if (debugObj.light) {
-        const sphereSize = 1
+        const sphereSize = 1;
         const pointLightHelper = new THREE.PointLightHelper(
           child,
           sphereSize,
           0xff0000
-        )
-        this.scene.add(pointLightHelper)
+        );
+        this.scene.add(pointLightHelper);
       }
     },
     /**
@@ -311,35 +350,43 @@ module.exports = Behavior({
         // './assets/models/0xFA/GDG24FG_decimate.glb',
         "https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/GDG24FG_decimate.glb",
         (obj) => {
-          this.model = obj.scene;
-          // 将模型文件添加到场景中
-          this.scene.add(this.model);
+          const that = this
+          wx.request({
+            url: "https://ce-cdn.midea.com/activity/sit/3D/models/0xFA/group.json", // 请替换为实际的 URL
+            success: function (res) {
+              that.group = res.data;
 
-          this.initCameraInModel(this.scene.getObjectByName("摄像机"));
-          this.initLightInModel(this.scene.getObjectByName("点光"));
+              that.model = obj.scene;
+              // 将模型文件添加到场景中
+              that.scene.add(that.model);
 
-          // 所有对象
-          this.readGroup();
-          // 具体业务代码
-          this.initFanLeafGroup();
-          this.initUpDownGroup();
-          this.initLrGroup();
+              that.initCameraInModel(that.scene.getObjectByName("摄像机"));
+              that.initLightInModel(that.scene.getObjectByName("点光"));
 
-          this.initColor();
-          // 具体业务代码
+              // 所有对象
+              that.readGroup();
+              // 具体业务代码
+              that.initFanLeafGroup();
+              that.initUpDownGroup();
+              that.initLrGroup();
 
-          this.animate();
-          this.animateCal();
-          this.animateUpdate();
+              that.initColor();
+              // 具体业务代码
 
-          let endTime = new Date().getTime();
-          console.warn("加载时间: ", (endTime - this.startTime) / 1000);
-          this.debugText = `加载时间: <br>${
-            (endTime - this.startTime) / 1000
-          }秒`;
-          this.hideLoading();
-          this.threeLoaded = true;
-          this.tryTellThreeLoaded();
+              that.animate();
+              that.animateCal();
+              that.animateUpdate();
+
+              let endTime = new Date().getTime();
+              console.warn("加载时间: ", (endTime - that.startTime) / 1000);
+              that.debugText = `加载时间: <br>${
+                (endTime - this.startTime) / 1000
+              }秒`;
+              that.hideLoading();
+              that.threeLoaded = true;
+              that.tryTellThreeLoaded();
+            },
+          });
         },
         (event) => {
           // 监听进度
