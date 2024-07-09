@@ -1,25 +1,18 @@
-view {
-  color: #123456;
+.container {
+  overflow-x: hidden;
+  height: 750rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.title {
-  font-size: larger;
-  text-align: center;
-}
-
-.desc {
-  font-size: smaller;
-  overflow: auto;
-  padding: 8px;
-}
-
-.line {
-  white-space: nowrap;
-}
-
-.btn {
-  text-align: center;
-  padding: 8px;
-  background-image: linear-gradient(to right, rgb(240, 240, 240), rgb(233, 233, 233));
-  margin: 10px;
+.three-wrapper {
+  position: absolute;
+  left:0;
+  top:0;
+  width:750rpx;
+  height:750rpx;
+  z-index:0;
+  overflow: hidden;
 }
