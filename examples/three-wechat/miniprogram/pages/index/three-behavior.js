@@ -212,6 +212,13 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    tryTellThreeLoaded() {
+      if (this.threeLoaded) {
+        // this.postDataToWeex({
+        //   type: 'threeLoaded',
+        // })
+      }
+    },
     updateLrGroup() {
       if (!this.lrGroup) return;
       calMatrix.copy(lrGroupMatrix);
@@ -688,7 +695,7 @@ module.exports = Behavior({
               let endTime = new Date().getTime();
               console.warn("加载时间: ", (endTime - that.startTime) / 1000);
               that.debugText = `加载时间: <br>${
-                (endTime - this.startTime) / 1000
+                (endTime - that.startTime) / 1000
               }秒`;
               that.hideLoading();
               that.threeLoaded = true;
@@ -750,6 +757,7 @@ module.exports = Behavior({
     threeMounted(canvas) {
       this.clock = new THREE.Clock();
       this.clockCal = new THREE.Clock();
+      this.startTime = new Date().getTime();
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
