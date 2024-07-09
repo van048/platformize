@@ -1,12 +1,32 @@
-'use strict';
+"use strict";
 
-var three = require('../../chunks/three.js');
-var screenshot = require('../../chunks/screenshot.js');
-var testsThree = require('../../chunks/tests-three.js');
+var three = require("../../chunks/three.js");
+var screenshot = require("../../chunks/screenshot.js");
+var testsThree = require("../../chunks/tests-three.js");
 
-function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// index.ts
+function _optionalChain(ops) {
+  let lastAccessLHS = undefined;
+  let value = ops[0];
+  let i = 1;
+  while (i < ops.length) {
+    const op = ops[i];
+    const fn = ops[i + 1];
+    i += 2;
+    if ((op === "optionalAccess" || op === "optionalCall") && value == null) {
+      return undefined;
+    }
+    if (op === "access" || op === "optionalAccess") {
+      lastAccessLHS = value;
+      value = fn(value);
+    } else if (op === "call" || op === "optionalCall") {
+      value = fn((...args) => value.call(lastAccessLHS, ...args));
+      lastAccessLHS = undefined;
+    }
+  }
+  return value;
+} // index.ts
 
-console.log('THREE Version', three.REVISION);
+console.log("THREE Version", three.REVISION);
 
 const DEMO_MAP = {
   MemoryTest: testsThree.DemoMemoryTest,
@@ -33,71 +53,100 @@ const DEMO_MAP = {
   DeviceOrientationControls: testsThree.DemoDeviceOrientationControls,
 };
 
-const getNode = id =>
-  new Promise(r => wx.createSelectorQuery().select(id).fields({ node: true, size: true }).exec(r));
+const getNode = (id, self) =>
+  new Promise((r) =>
+    wx
+      .createSelectorQuery()
+      .in(self)
+      .select(id)
+      .fields({ node: true, size: true })
+      .exec(r)
+  );
 
 // @ts-ignore
-Page({
+Component({
   disposing: false,
   switchingItem: false,
-  deps: {} ,
-  currDemo: null ,
-  platform: null ,
-  helperCanvas: null ,
+  deps: {},
+  currDemo: null,
+  platform: null,
+  helperCanvas: null,
 
   data: {
     showMenu: true,
     showCanvas: false,
     currItem: -1,
     menuList: [
-      'GLTFLoader',
-      'ThreeSpritePlayer',
-      'DeviceOrientationControls',
-      'RGBELoader',
-      'SVGLoader',
-      'OBJLoader',
-      'MeshOpt',
-      'EXRLoader',
-      'HDRPrefilterTexture',
-      'MTLLoader',
-      'LWOLoader',
-      'FBXLoader',
-      'BVHLoader',
-      'ColladaLoader',
-      'MeshQuantization',
-      'TTFLoader',
-      'STLLoader',
-      'PDBLoader',
-      'TGALoader',
-      'VTKLoader',
-      'VSMShadow',
-      'MemoryTest',
+      "GLTFLoader",
+      "ThreeSpritePlayer",
+      "DeviceOrientationControls",
+      "RGBELoader",
+      "SVGLoader",
+      "OBJLoader",
+      "MeshOpt",
+      "EXRLoader",
+      "HDRPrefilterTexture",
+      "MTLLoader",
+      "LWOLoader",
+      "FBXLoader",
+      "BVHLoader",
+      "ColladaLoader",
+      "MeshQuantization",
+      "TTFLoader",
+      "STLLoader",
+      "PDBLoader",
+      "TGALoader",
+      "VTKLoader",
+      "VSMShadow",
+      "MemoryTest",
     ],
   },
 
+  attached() {
+    this.onReady()
+  },
+  detached() {
+    this.onUnload()
+  },
+
+  methods:{
   onReady() {
     this.onCanvasReady();
   },
 
   onCanvasReady() {
-    console.log('onCanvasReady');
-    Promise.all([getNode('#gl'), getNode('#canvas')]).then(([glRes, canvasRes]) => {
-      // @ts-ignore
-      this.initCanvas(glRes[0].node, canvasRes[0].node);
-    });
+    console.log("onCanvasReady");
+    Promise.all([getNode("#gl",this), getNode("#canvas",this)]).then(
+      ([glRes, canvasRes]) => {
+        // @ts-ignore
+        this.initCanvas(glRes[0].node, canvasRes[0].node);
+      }
+    );
   },
 
   initCanvas(canvas, helperCanvas) {
     const platform = new screenshot.WechatPlatform(canvas);
     this.platform = platform;
-    platform.enableDeviceOrientation('game');
+    platform.enableDeviceOrientation("game");
     three.PlatformManager.set(platform);
 
-    console.log(three.PlatformManager.polyfill.window.innerWidth, three.PlatformManager.polyfill.window.innerHeight);
+    console.log(
+      three.PlatformManager.polyfill.window.innerWidth,
+      three.PlatformManager.polyfill.window.innerHeight
+    );
     console.log(canvas.width, canvas.height);
 
-    const renderer = new three.WebGL1Renderer({ canvas, antialias: true, alpha: false });
-    const camera = new three.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+    const renderer = new three.WebGL1Renderer({
+      canvas,
+      antialias: true,
+      alpha: false,
+    });
+    const camera = new three.PerspectiveCamera(
+      75,
+      canvas.width / canvas.height,
+      0.1,
+      1000
+    );
     const scene = new three.Scene();
     const clock = new three.Clock();
     const gltfLoader = new screenshot.GLTFLoader();
@@ -116,12 +165,18 @@ Page({
     const render = () => {
       if (this.disposing) return;
       three.PlatformManager.polyfill.requestAnimationFrame(render);
-      _optionalChain([(this.currDemo ), 'optionalAccess', _ => _.update, 'call', _2 => _2()]);
+      _optionalChain([
+        this.currDemo,
+        "optionalAccess",
+        (_) => _.update,
+        "call",
+        (_2) => _2(),
+      ]);
       renderer.render(scene, camera);
     };
 
     render();
-    console.log('canvas inited');
+    console.log("canvas inited");
   },
 
   onMenuClick() {
@@ -138,14 +193,20 @@ Page({
 
   async onMenuItemClick(e) {
     const { i, item } = e.currentTarget.dataset;
-    wx.showLoading({ mask: false, title: '加载中' });
+    wx.showLoading({ mask: false, title: "加载中" });
     if (this.switchingItem || !DEMO_MAP[item]) return;
 
-    _optionalChain([(this.currDemo ), 'optionalAccess', _3 => _3.dispose, 'call', _4 => _4()]);
+    _optionalChain([
+      this.currDemo,
+      "optionalAccess",
+      (_3) => _3.dispose,
+      "call",
+      (_4) => _4(),
+    ]);
     this.switchingItem = true;
-    this.currDemo = null ;
+    this.currDemo = null;
 
-    const demo = new DEMO_MAP[item](this.deps) ;
+    const demo = new DEMO_MAP[item](this.deps);
     await demo.init();
     this.currDemo = demo;
     this.setData({ currItem: i });
@@ -160,15 +221,20 @@ Page({
 
   screenshot() {
     const { renderer, scene, camera } = this.deps;
-    const [data, w, h] = screenshot.screenshot(renderer, scene, camera, three.WebGLRenderTarget);
-    const ctx = this.helperCanvas.getContext('2d');
+    const [data, w, h] = screenshot.screenshot(
+      renderer,
+      scene,
+      camera,
+      three.WebGLRenderTarget
+    );
+    const ctx = this.helperCanvas.getContext("2d");
     const imgData = this.helperCanvas.createImageData(data, w, h);
     this.helperCanvas.height = imgData.height;
     this.helperCanvas.width = imgData.width;
     ctx.putImageData(imgData, 0, 0);
     const imgDataFromCanvas = ctx.getImageData(0, 0, w, h);
-    const hasPixel = imgDataFromCanvas.data.some(i => i !== 0);
-    console.log('hasPixel', hasPixel);
+    const hasPixel = imgDataFromCanvas.data.some((i) => i !== 0);
+    console.log("hasPixel", hasPixel);
     wx.canvasToTempFilePath({
       // @ts-ignore
       canvas: this.helperCanvas,
@@ -181,7 +247,7 @@ Page({
   },
 
   async screenrecord() {
-    console.log('screenrecord clicked');
+    console.log("screenrecord clicked");
     const fps = 20;
     const canvas = this.deps.renderer.domElement;
     const recorder = wx.createMediaRecorder(canvas, {
@@ -190,22 +256,22 @@ Page({
       duration: 5,
     });
 
-    await new Promise(resolve => {
-      recorder.on('start', resolve);
+    await new Promise((resolve) => {
+      recorder.on("start", resolve);
       recorder.start();
     });
-    console.log('start');
+    console.log("start");
 
     let frames = fps * 5;
     while (frames--) {
-      await new Promise(resolve => recorder.requestFrame(resolve));
-      await new Promise(resolve => setTimeout(resolve, 1000 / fps));
+      await new Promise((resolve) => recorder.requestFrame(resolve));
+      await new Promise((resolve) => setTimeout(resolve, 1000 / fps));
       console.log(frames);
       // render()
     }
 
-    const { tempFilePath } = await new Promise(resolve => {
-      recorder.on('stop', resolve);
+    const { tempFilePath } = await new Promise((resolve) => {
+      recorder.on("stop", resolve);
       recorder.stop();
     });
     console.log(tempFilePath);
@@ -216,7 +282,7 @@ Page({
       sources: [
         {
           url: tempFilePath,
-          type: 'video',
+          type: "video",
         },
       ],
     });
@@ -224,9 +290,16 @@ Page({
 
   onUnload() {
     this.disposing = true;
-    _optionalChain([(this.currDemo ), 'optionalAccess', _5 => _5.dispose, 'call', _6 => _6()]);
+    _optionalChain([
+      this.currDemo,
+      "optionalAccess",
+      (_5) => _5.dispose,
+      "call",
+      (_6) => _6(),
+    ]);
     three.PlatformManager.dispose();
   },
 
   onShareAppMessage() {},
+}
 });
