@@ -44,7 +44,6 @@ Component({
   deps: {},
   currDemo: null,
   platform: null,
-  helperCanvas: null,
 
   behaviors: [threeBehavior],
   data: {
@@ -90,15 +89,15 @@ Component({
 
     onCanvasReady() {
       console.log("onCanvasReady");
-      Promise.all([getNode("#gl", this), getNode("#canvas", this)]).then(
-        ([glRes, canvasRes]) => {
+      Promise.all([getNode("#gl", this)]).then(
+        ([glRes]) => {
           // @ts-ignore
-          this.initCanvas(glRes[0].node, canvasRes[0].node);
+          this.initCanvas(glRes[0].node);
         }
       );
     },
 
-    initCanvas(canvas, helperCanvas) {
+    initCanvas(canvas) {
       console.log(canvas.width, canvas.height);
 
       console.log("canvas inited");
