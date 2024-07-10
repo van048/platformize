@@ -220,23 +220,23 @@ module.exports = Behavior({
     resetLrDegAnim() {
       // 复位
       if (Math.abs(lrDeg) > 0.01) {
-        const up = -(Math.PI / 180) * (1.2 * 100 - 60)
-        const down = -(Math.PI / 180) * (1.2 * 0 - 60)
-        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag))
-        if (lrDeg <= up) lrDirectionFlag = 1
-        else if (lrDeg >= down) lrDirectionFlag = -1
+        const up = -(Math.PI / 180) * (1.2 * 100 - 60);
+        const down = -(Math.PI / 180) * (1.2 * 0 - 60);
+        lrDeg = Math.min(down, Math.max(up, lrDeg + lrSpeed * lrDirectionFlag));
+        if (lrDeg <= up) lrDirectionFlag = 1;
+        else if (lrDeg >= down) lrDirectionFlag = -1;
       } else {
-        lrDeg = 0
+        lrDeg = 0;
       }
     },
     resetUdDegAnim() {
       // 复位
       if (Math.abs(udDeg) > 0.01) {
-        if (udDeg >= 0) udDirectionFlag = -1
-        else if (udDeg <= 0) udDirectionFlag = 1
-        udDeg = udDeg + upDownSpeed * udDirectionFlag
+        if (udDeg >= 0) udDirectionFlag = -1;
+        else if (udDeg <= 0) udDirectionFlag = 1;
+        udDeg = udDeg + upDownSpeed * udDirectionFlag;
       } else {
-        udDeg = 0
+        udDeg = 0;
       }
     },
     tryTellThreeLoaded() {
@@ -720,7 +720,7 @@ module.exports = Behavior({
               that.animateUpdate();
 
               let endTime = new Date().getTime();
-              console.warn("加载时间: ", (endTime - that.startTime) / 1000);
+              console.log("加载时间: ", (endTime - that.startTime) / 1000);
               that.debugText = `加载时间: <br>${
                 (endTime - that.startTime) / 1000
               }秒`;
@@ -788,7 +788,9 @@ module.exports = Behavior({
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
-      platform.enableDeviceOrientation("game");
+      platform.enableDeviceOrientation("game").catch((err) => {
+        console.log("enableDeviceOrientation err", err);
+      });
       three.PlatformManager.set(platform);
       window = three.PlatformManager.polyfill.window;
       requestAnimationFrame =

@@ -14,6 +14,8 @@
     "beforeUpload": "npm run tsc"
   },
   "setting": {
+    "ignoreDevUnusedFiles": false,
+    "ignoreUploadUnusedFiles": true,
     "urlCheck": false,
     "es6": true,
     "enhance": true,
@@ -49,8 +51,7 @@
     "disableUseStrict": false,
     "minifyWXML": true,
     "showES6CompileOption": false,
-    "useCompilerPlugins": false,
-    "ignoreUploadUnusedFiles": true
+    "useCompilerPlugins": false
   },
   "simulatorType": "wechat",
   "simulatorPluginLibVersion": {},
