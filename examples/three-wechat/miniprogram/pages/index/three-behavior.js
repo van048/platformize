@@ -201,6 +201,36 @@ let newMUd = swingRangeShapeCeMianMatrix
   .premultiply(cameraCeMianMatrix.clone().invert());
 let swingRangeShapeInitPosUd;
 let swingRangeShapeInitPosUdOffset = -0.5;
+// 定向送风
+// 留给控制柄的位置偏移量
+let targetAngleOffset = 3.5;
+// 转到正面时摄像机的matrix
+let cameraZhengMianMatrix = new THREE.Matrix4().fromArray([
+  0.100000016, 0, 0, 0, 0, 0.100000009, 0, 0, 0, 0, 0.100000001, 0, 0, 0.6,
+  3.04615338, 1,
+]);
+// 作为scene的子对象时，转到正面时扇形的matrix
+let swingRangeShapeZhengMianMatrix = new THREE.Matrix4().fromArray([
+  2.220446049250313e-16, -1, 3.14018491736755e-16, 0, -1,
+  -2.220446049250313e-16, 2.465190328815662e-32, 0, 2.465190328815662e-32,
+  -3.14018491736755e-16, -1, 0, 0, 0.7984388716086597, 0.1361891151791681, 1,
+]);
+// 作为camera的子对象时，扇形的matrix
+let newM = swingRangeShapeZhengMianMatrix
+  .clone()
+  .premultiply(cameraZhengMianMatrix.clone().invert());
+let cameraAnimSwingOff = {
+  pos: null,
+  target: null,
+  light: null,
+};
+// 扇形动画
+let swingRangeShapeInitPos = new THREE.Vector3(
+  0,
+  1.9843885374916281,
+  -29.09964235721189
+);
+let swingRangeShapeInitPosOffset = 1;
 function pxToRem(px) {
   return px + "rpx";
 }
@@ -380,6 +410,59 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    addSwingRangeObjects() {
+      const swingRangeRadius = 0.3;
+      this.swingRangeRadius = swingRangeRadius;
+
+      const offset = targetAngleOffset;
+      const up =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle + offset) - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle - offset) - 60);
+
+      const { plane, plane_1, plane_2, sphere } = this.initShapeAndSphere(
+        swingRangeRadius,
+        down,
+        up
+      );
+      this.rangePlane = plane;
+      this.rangePlane_1 = plane_1;
+      this.rangePlane_2 = plane_2;
+
+      const newSphereDown =
+        (Math.PI / 180) * (1.2 * this.swingChangeSettingObj.target_angle - 60);
+      sphere.position.set(
+        swingRangeRadius * Math.cos(newSphereDown),
+        swingRangeRadius * Math.sin(newSphereDown),
+        this.sphereRadius / 2
+      );
+
+      this.swingRangeShape = new THREE.Group();
+      this.swingRangeShape.add(plane_1);
+      this.swingRangeShape.add(plane_2);
+      this.swingRangeShape.add(plane);
+      this.swingRangeShape.add(sphere);
+      this.swingRangeShape.add(sphereRight);
+      this.spheres = [sphere];
+
+      // 塞到camera里，那就可以一直相对摄像头静止
+      this.camera.add(this.swingRangeShape);
+      this.swingRangeShape.matrix = newM.clone();
+      this.swingRangeShape.matrix.decompose(
+        this.swingRangeShape.position,
+        this.swingRangeShape.quaternion,
+        this.swingRangeShape.scale
+      );
+      setOpacity(this.swingRangeShape, 0);
+    },
+    seeSwingRange() {
+      // 锁定参数
+      this.swingChangeSettingObj = JSON.parse(JSON.stringify(this.statusData));
+      this.seeingSwingRange = true;
+      this.addSwingRangeObjects();
+    },
     addShapeHelper(totalAngle, swingRangeRadius, sphereRadius) {
       // 辅助用，用于定位扇形最右端
       const geometry_2 = new THREE.SphereGeometry(0.000001, 32, 32);
@@ -620,6 +703,81 @@ module.exports = Behavior({
       setTimeout(() => {
         this.showUdDegreeTips = true;
       }, showSwingDegreeTipsTimeout);
+    },
+    transformHomeLrNotSwinging(showSwingDegreeTipsTimeout, cameraAnimNow) {
+      this.seeSwingRange();
+      this.showSwingDegreeTab = true;
+
+      cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos.clone();
+      // .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))
+      // .sub(new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1))
+      // // 微调
+      // .add(new THREE.Vector3(0.1, 0, 0.1))
+      cameraAnimSwingOff.target = cameraAnimForwardHome.endTarget.clone();
+      // cameraAnimSwingOff.target.x -= 0.05
+      cameraAnimSwingOff.light = cameraAnimForwardHome.endLight.clone();
+
+      animateCamera(
+        cameraAnimNow.pos.clone(),
+        cameraAnimNow.target.clone(),
+        cameraAnimNow.light.clone(),
+        cameraAnimSwingOff.pos.clone(),
+        cameraAnimSwingOff.target.clone(),
+        cameraAnimSwingOff.light.clone(),
+        normalAnimDuration,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer,
+        cameraAnimNow.type == "ud" ? this.cameraAnimUdScaleFunc : null
+      );
+
+      let startPos = swingRangeShapeInitPos.clone();
+      startPos.y += swingRangeShapeInitPosOffset;
+      animateObject(
+        this.swingRangeShape,
+        startPos.clone(),
+        swingRangeShapeInitPos.clone(),
+        0,
+        1,
+        normalAnimDuration
+      );
+      setTimeout(() => {
+        this.showFixDegreeTips = true;
+      }, showSwingDegreeTipsTimeout);
+      setTimeout(() => {
+        // TODO
+        // this.switchObj.show = true;
+        this.setData({
+          "switchObj.show": true,
+        });
+      }, 300);
+    },
+    transformHomeLr(lastTransformType, showSwingDegreeTipsTimeout) {
+      this.showUdDegreeTips = false;
+      let cameraAnimNow = {
+        pos: cameraAnimForwardHome.startPos,
+        target: cameraAnimForwardHome.startTarget,
+        light: cameraAnimForwardHome.startLight,
+      };
+      if (lastTransformType === "ud") {
+        cameraAnimNow = {
+          pos: cameraAnimUd.endPos,
+          target: cameraAnimUd.endTarget,
+          light: cameraAnimUd.endLight,
+          type: "ud",
+        };
+      }
+      console.log("isLrSwinging", this.isLrSwinging);
+      console.log("isLrFocus", this.isLrFocus);
+      if (this.isLrSwinging) {
+        this.transformHomeLrSwinging(showSwingDegreeTipsTimeout, cameraAnimNow);
+      } else {
+        this.transformHomeLrNotSwinging(
+          showSwingDegreeTipsTimeout,
+          cameraAnimNow
+        );
+      }
     },
     transformHome(lastTransformType, type) {
       // home是web收缩到web展开的切换，web展开可能是在左右tab或上下tab，所以home最终可能会是类似于swingOn/swingOff/ud的状态
