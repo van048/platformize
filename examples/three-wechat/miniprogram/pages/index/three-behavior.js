@@ -174,8 +174,67 @@ const calQuaternion = new THREE.Quaternion();
 let customColorKey = "GDG24FG_customColor";
 
 // transform
+let cameraAnimUd = {
+  endPos: null,
+  endTarget: null,
+  endLight: new THREE.Vector3(0, 0.6, 4).add(new THREE.Vector3(2.93, 0, -1.49)),
+};
+let normalAnimDuration = ((1000 / 24) * 20) / 1.5;
 function pxToRem(px) {
   return px + "rpx";
+}
+// 使用线性插值的easing函数
+function linearEasing(t) {
+  return t;
+}
+function animateCamera(
+  startPos,
+  startTarget,
+  startLight,
+  endPos,
+  endTarget,
+  endLight,
+  duration,
+  camera,
+  scene,
+  light,
+  renderer,
+  progressCallback,
+  easing = linearEasing
+) {
+  let startTime = performance.now();
+
+  const tick = () => {
+    const elapsedTime = performance.now() - startTime;
+    const fraction = elapsedTime / duration;
+
+    if (fraction < 1) {
+      // 使用提供的easing函数来计算插值
+      const easedProgress = easing(fraction);
+      progressCallback && progressCallback(easedProgress);
+
+      const newPos = startPos.clone().lerp(endPos, easedProgress);
+      camera.position.set(newPos.x, newPos.y, newPos.z);
+      const newTarget = startTarget.clone().lerp(endTarget, easedProgress);
+      camera.lookAt(newTarget);
+      const newLight = startLight.clone().lerp(endLight, easedProgress);
+      light.position.set(newLight.x, newLight.y, newLight.z);
+      light.lookAt(newTarget);
+
+      requestAnimationFrame(tick);
+    } else {
+      // 动画结束，设置最终位置
+      camera.position.set(endPos.x, endPos.y, endPos.z);
+      camera.lookAt(endTarget);
+      light.position.set(endLight.x, endLight.y, endLight.z);
+      light.lookAt(endTarget);
+      progressCallback && progressCallback(1);
+    }
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+  };
+
+  tick();
 }
 
 // 调试开关
@@ -226,6 +285,150 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    reset2() {
+      this.seeingSwingRange2 = false;
+      this.swingRangeShape && this.swingRangeShape.removeFromParent();
+      this.swingRangeShape = null;
+    },
+    setCameraAnimUdAndAnimateInHomeNotLr() {
+      cameraAnimUd.endPos = cameraAnimForwardHome.endPos
+        .clone()
+        .sub(new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1))
+        .add(new THREE.Vector3(2.53438, 0.680595, -0.137939 * -1))
+        // 微调
+        .add(new THREE.Vector3(0.5, 0, 0));
+      cameraAnimUd.endTarget = cameraAnimForwardHome.endTarget
+        .clone()
+        // 微调
+        .add(new THREE.Vector3(0, 0, 0.1));
+
+      this.reset2();
+      animateCamera(
+        cameraAnimForwardHome.startPos.clone(),
+        cameraAnimForwardHome.startTarget.clone(),
+        cameraAnimForwardHome.startLight.clone(),
+        cameraAnimUd.endPos.clone(),
+        cameraAnimUd.endTarget.clone(),
+        cameraAnimUd.endLight.clone(),
+        normalAnimDuration,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer
+        // singleBounce
+      );
+    },
+    $nextTick(callback) {
+      wx.nextTick(callback);
+    },
+    transformHomeNotLr(showSwingDegreeTipsTimeout) {
+      let startPos;
+      this.currentTransformType = "ud";
+      this.swingDegreeTipsTransitionName = "fade-slide-x";
+      this.swingFixDegreeTipsTransitionName = "fade-slide-x";
+      this.$nextTick(() => {
+        this.showSwingDegreeTab = true;
+        this.seeUd();
+        this.showSwingDegreeTips = false;
+        this.showFixDegreeTips = false;
+        this.switchObj.show = false;
+        this.upPanel.show = true;
+
+        startPos = swingRangeShapeInitPosUd.clone();
+        startPos.y += swingRangeShapeInitPosUdOffset;
+        animateObject(
+          this.swingRangeShape,
+          startPos.clone(),
+          swingRangeShapeInitPosUd.clone(),
+          0,
+          1,
+          normalAnimDuration
+        );
+      });
+      this.setCameraAnimUdAndAnimateInHomeNotLr();
+      setTimeout(() => {
+        this.showUdDegreeTips = true;
+      }, showSwingDegreeTipsTimeout);
+    },
+    transformHome(lastTransformType, type) {
+      // home是web收缩到web展开的切换，web展开可能是在左右tab或上下tab，所以home最终可能会是类似于swingOn/swingOff/ud的状态
+
+      // homeBack，其实是处理homeBack=>swingOn/swingOff/ud
+      // ud=>home，其实是处理ud=>swingOn/swingOff
+      // swingOn=>home，其实是处理swingOn=>swingOff/ud
+      // swingOff=>home，其实是处理swingOff=>swingOn/ud
+      if (
+        lastTransformType == "homeBack" ||
+        lastTransformType == null ||
+        lastTransformType == "ud"
+      ) {
+        let showSwingDegreeTipsTimeout = 600;
+        if (lastTransformType === "ud") {
+          this.swingDegreeTipsTransitionName = "fade-slide-x";
+          this.swingFixDegreeTipsTransitionName = "fade-slide-x";
+          showSwingDegreeTipsTimeout = 0;
+          this.reset();
+          this.reset2();
+          this.upPanel.show = false;
+        }
+        if (lastTransformType == "homeBack") {
+          this.udDegreeTipsTransitionName = "fade-slide-y";
+          this.swingDegreeTipsTransitionName = "fade-slide-y";
+          this.swingFixDegreeTipsTransitionName = "fade-slide-y";
+        }
+        this.currentTransformType = type;
+        this.transforming = true;
+        if (this.activeTab === "lr") {
+          this.transformHomeLr(lastTransformType, showSwingDegreeTipsTimeout);
+        } else {
+          this.transformHomeNotLr(showSwingDegreeTipsTimeout);
+        }
+        this.modelMaskStyleObj.height = pxToRem(400);
+      }
+    },
+    transform(type) {
+      if (!this.camera) return;
+      if (this.transforming) return;
+      // console.log('statusData', this.statusData)
+      // console.log('type', type)
+      let lastTransformType = this.currentTransformType;
+      // console.log('lastTransformType', lastTransformType)
+
+      this.swingDegreeTipsTransitionName = "fade-slide-y";
+      this.swingFixDegreeTipsTransitionName = "fade-slide-y-fix";
+      this.udDegreeTipsTransitionName = "fade-slide-ud";
+      switch (type) {
+        case "ud":
+          this.transformUd(lastTransformType, type);
+          break;
+        case "home":
+          this.transformHome(lastTransformType, type);
+          break;
+        case "homeBack":
+          this.transformHomeBack(lastTransformType, type);
+          break;
+        case "swingOff":
+          this.transformSwingOff(lastTransformType, type);
+          break;
+        case "swingOn":
+          this.transformSwingOn(lastTransformType, type);
+          break;
+        case "look":
+          if (lastTransformType != "homeBack" && lastTransformType != null)
+            break;
+          this.transformLook(type);
+          break;
+        case "homeBackOff":
+          this.transformHomeBackOff(lastTransformType, type);
+          break;
+      }
+      setTimeout(() => {
+        this.transforming = false;
+      }, normalAnimDuration + 500);
+    },
+    test() {
+      this.transform("home");
+    },
     resetLrDegAnim() {
       // 复位
       if (Math.abs(lrDeg) > 0.01) {
