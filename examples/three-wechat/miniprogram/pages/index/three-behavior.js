@@ -292,7 +292,10 @@ module.exports = Behavior({
       //纹理贴图加载器TextureLoader
       const texLoader = new THREE.TextureLoader();
       // .load()方法加载图像，返回一个纹理对象Texture
-      const texture = texLoader.load("./assets/textures/range_1.png?v=2");
+      // const texture = texLoader.load("./assets/textures/range_1.png?v=2");
+      const texture = texLoader.load(
+        "https://ce-cdn.midea.com/activity/sit/3D/textures/range_1.png"
+      );
       texture.colorSpace = THREE.SRGBColorSpace;
       const material = new THREE.MeshBasicMaterial({
         // 设置纹理贴图：Texture对象作为材质map属性的属性值
