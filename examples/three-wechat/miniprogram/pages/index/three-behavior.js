@@ -442,6 +442,42 @@ module.exports = Behavior({
     test7() {
       this.transform("homeBackOff");
     },
+    transformUd(lastTransformType, type) {
+      let startPos
+      // homeBack=>ud，不直接切换，是通过homeBack=>home + activeTab=ud来切换
+      if (
+        lastTransformType === 'home' ||
+        lastTransformType === 'swingOff' ||
+        lastTransformType === 'swingOn'
+      ) {
+        this.reset()
+        this.reset2()
+        this.currentTransformType = type
+        this.transforming = true
+        this.swingDegreeTipsTransitionName = 'fade-slide-x'
+        this.swingFixDegreeTipsTransitionName = 'fade-slide-x'
+        this.$nextTick(() => {
+          this.seeUd()
+          this.showUdDegreeTips = true
+          this.showSwingDegreeTips = false
+          this.showFixDegreeTips = false
+          this.switchObj.show = false
+          this.upPanel.show = true
+
+          startPos = swingRangeShapeInitPosUd.clone()
+          startPos.y += swingRangeShapeInitPosUdOffset
+          animateObject(
+            this.swingRangeShape,
+            startPos.clone(),
+            swingRangeShapeInitPosUd.clone(),
+            0,
+            1,
+            normalAnimDuration
+          )
+        })
+        this.setCameraAnimUdAndAnimate()
+      }
+    },
     setCameraAnimHomeBackAndAnimate(lastTransformType) {
       let durationScale = 1;
       let cameraAnimNow = {
@@ -491,6 +527,7 @@ module.exports = Behavior({
     },
     transformHomeBack(lastTransformType, type) {
       let startPos;
+      if (!lastTransformType) return
       // home=>homeBack
       // ud=>homeBack
       // swingOn=>homeBack
@@ -1632,6 +1669,10 @@ module.exports = Behavior({
       this.clock = new THREE.Clock();
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
+
+      this.setData({
+        activeTab: 'lr'
+      })
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
