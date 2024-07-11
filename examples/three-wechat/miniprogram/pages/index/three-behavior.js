@@ -881,12 +881,13 @@ module.exports = Behavior({
     },
     // 初始化自定义外观，如果有的话
     initColor() {
-      // TODO
-      this.lookPanel = this.data.lookPanel;
-
       let color = localStorage.getItem(customColorKey) || "#FFFFFF";
       light.color = this.convertColor(color);
-      this.lookPanel.activeOption = color;
+      // TODO
+      // this.lookPanel.activeOption = color;
+      this.setData({
+        'lookPanel.activeOption': color
+      })
     },
     initLrGroup() {
       this.lrGroupObj = this.group.find((it) => it.desc == "左右摇柄");
