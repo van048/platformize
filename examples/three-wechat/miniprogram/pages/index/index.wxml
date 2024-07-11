@@ -1,5 +1,5 @@
 <!-- index.wxml -->
-<view class="page">
+<view class="page" style="--anim-duration: 0.5s;">
   <canvas class="canvas {{showCanvas ? '' : 'hide'}}" id="gl" type="webgl" bindtouchstart="onTX" bindtouchmove="onTX" bindtouchend="onTX"></canvas>
   <view class="btn-group">
     <button class="btn" bindtap="test">测试</button>
@@ -8,4 +8,9 @@
     <button class="btn" bindtap="test4">测试4</button>
   </view>
   <view class="model-mask height-transition" style="height:{{modelMaskStyleObj.height}}"></view>
+  <view class="up-switch-wrapper flex-rcc {{lookPanel.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" wx:if="lookPanel.show">
+    <view data-item="{{item}}" wx:for="{{lookPanel.options}}" wx:key="item" class="look-option flex-ccc {{item === lookPanel.activeOption?'look-option-active':''}}" bindtap="lookOptionClick">
+      <view class="look-option-content" style="background: {{item}}"></view>
+    </view>
+  </view>
 </view>

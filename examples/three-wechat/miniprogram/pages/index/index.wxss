@@ -3,8 +3,8 @@
 .page {
   display: flex;
   flex-direction: column;
-  width:750rpx;
-  height:1280rpx;
+  width: 750rpx;
+  height: 1280rpx;
   overflow: hidden;
   position: fixed;
   z-index: 0;
@@ -129,4 +129,53 @@
 }
 .height-transition {
   transition: height 1s;
+}
+.up-switch-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100px;
+  z-index:1;
+}
+
+.look-option {
+  width: 36px;
+  height: 36px;
+  background: #ffffff;
+  box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.08);
+  border-radius: 36px;
+  scale: 0.6;
+}
+.look-option-active {
+  scale: 1;
+}
+.look-option-content {
+  width: 30px;
+  height: 30px;
+  border-radius: 30px;
+}
+.look-option:not(:first-child) {
+  margin-left: 30px;
+}
+.flex-rcc {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+.flex-ccc {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.fade-slide-y-switch-enter {
+  opacity: 0;
+  transform: translate(0, 60px);
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
+}
+.fade-slide-y-switch-origin {
+  opacity: 1;
+  transform: translate(0, 0);
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
 }

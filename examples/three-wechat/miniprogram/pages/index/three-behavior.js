@@ -133,6 +133,9 @@ var localStorage = {
   getItem: function (key) {
     return wx.getStorageSync(key);
   },
+  setItem: function (key, value) {
+    return wx.setStorageSync(key, value);
+  },
 };
 
 let cameraInitPos;
@@ -416,6 +419,25 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    confirmChangeColor() {
+      // 如果选择过，记录；没有选择过，保持原样
+      this.selectedColor &&
+        localStorage.setItem(customColorKey, this.selectedColor);
+    },
+    selectColor(color) {
+      this.selectedColor = color;
+      // TODO
+      // this.lookPanel.activeOption = this.selectedColor
+      this.setData({
+        "lookPanel.activeOption": this.selectedColor,
+      });
+      light.color = this.convertColor(color);
+    },
+    lookOptionClick(event) {
+      let value = event.currentTarget.dataset.item;
+      this.selectColor(value);
+      this.confirmChangeColor();
+    },
     startChangeColor() {
       this.selectedColor = null;
       this.changingColor = true;
