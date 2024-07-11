@@ -442,30 +442,123 @@ module.exports = Behavior({
     test7() {
       this.transform("homeBackOff");
     },
+
+    addSwingRangeObjects2() {
+      const swingRangeRadius = 0.3;
+      this.swingRangeRadius = swingRangeRadius;
+      const up =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60);
+
+      // 添加描边
+      // const edges = new THREE.EdgesGeometry(plane.geometry)
+      // const line = new THREE.LineSegments(
+      //   edges,
+      //   new THREE.LineBasicMaterial({ color: 0x0000ff })
+      //   )
+
+      const { plane, plane_1, plane_2, sphere, sphere_1 } =
+        this.initShapeAndSphere(swingRangeRadius, down, up);
+      this.rangePlane = plane;
+      this.rangePlane_1 = plane_1;
+      this.rangePlane_2 = plane_2;
+
+      this.swingRangeShape = new THREE.Group();
+      this.swingRangeShape.add(plane_1);
+      this.swingRangeShape.add(plane_2);
+      this.swingRangeShape.add(plane);
+      // this.swingRangeShape.add(line)
+      this.swingRangeShape.add(sphere);
+      this.swingRangeShape.add(sphere_1);
+      this.swingRangeShape.add(sphereRight);
+      this.spheres = [sphere, sphere_1];
+      this.swingRangeShape.rotateX(Math.PI / 2);
+      this.swingRangeShape.rotateZ(Math.PI / 2);
+      this.swingRangeShape.rotateOnWorldAxis(
+        new THREE.Vector3(1, 0, 0),
+        Math.PI / 2
+      );
+
+      // 塞到camera里，那就可以一直相对摄像头静止
+      this.camera.add(this.swingRangeShape);
+      this.swingRangeShape.matrix = newM;
+      this.swingRangeShape.matrix.decompose(
+        this.swingRangeShape.position,
+        this.swingRangeShape.quaternion,
+        this.swingRangeShape.scale
+      );
+      setOpacity(this.swingRangeShape, 0);
+    },
+    seeSwingRange2() {
+      // 锁定参数
+      this.swingChangeSettingObj = JSON.parse(JSON.stringify(this.statusData));
+      this.seeingSwingRange2 = true;
+      this.addSwingRangeObjects2();
+    },
+    transformHomeLrSwinging(showSwingDegreeTipsTimeout, cameraAnimNow) {
+      this.seeSwingRange2();
+      this.showSwingDegreeTab = true;
+      animateCamera(
+        cameraAnimNow.pos.clone(),
+        cameraAnimNow.target.clone(),
+        cameraAnimNow.light.clone(),
+        cameraAnimForwardHome.endPos.clone(),
+        cameraAnimForwardHome.endTarget.clone(),
+        cameraAnimForwardHome.endLight.clone(),
+        normalAnimDuration,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer,
+        cameraAnimNow.type == "ud" ? this.cameraAnimUdScaleFunc : null
+      );
+      let startPos = swingRangeShapeInitPos.clone();
+      startPos.y += swingRangeShapeInitPosOffset;
+      animateObject(
+        this.swingRangeShape,
+        startPos.clone(),
+        swingRangeShapeInitPos.clone(),
+        0,
+        1,
+        normalAnimDuration
+      );
+      setTimeout(() => {
+        this.showSwingDegreeTips = true;
+      }, showSwingDegreeTipsTimeout);
+      setTimeout(() => {
+        // this.switchObj.show = true;
+        this.setData({
+          "switchObj.show": true,
+        });
+      }, 300);
+    },
     transformUd(lastTransformType, type) {
-      let startPos
+      let startPos;
       // homeBack=>ud，不直接切换，是通过homeBack=>home + activeTab=ud来切换
       if (
-        lastTransformType === 'home' ||
-        lastTransformType === 'swingOff' ||
-        lastTransformType === 'swingOn'
+        lastTransformType === "home" ||
+        lastTransformType === "swingOff" ||
+        lastTransformType === "swingOn"
       ) {
-        this.reset()
-        this.reset2()
-        this.currentTransformType = type
-        this.transforming = true
-        this.swingDegreeTipsTransitionName = 'fade-slide-x'
-        this.swingFixDegreeTipsTransitionName = 'fade-slide-x'
+        this.reset();
+        this.reset2();
+        this.currentTransformType = type;
+        this.transforming = true;
+        this.swingDegreeTipsTransitionName = "fade-slide-x";
+        this.swingFixDegreeTipsTransitionName = "fade-slide-x";
         this.$nextTick(() => {
-          this.seeUd()
-          this.showUdDegreeTips = true
-          this.showSwingDegreeTips = false
-          this.showFixDegreeTips = false
-          this.switchObj.show = false
-          this.upPanel.show = true
+          this.seeUd();
+          this.showUdDegreeTips = true;
+          this.showSwingDegreeTips = false;
+          this.showFixDegreeTips = false;
+          this.switchObj.show = false;
+          this.upPanel.show = true;
 
-          startPos = swingRangeShapeInitPosUd.clone()
-          startPos.y += swingRangeShapeInitPosUdOffset
+          startPos = swingRangeShapeInitPosUd.clone();
+          startPos.y += swingRangeShapeInitPosUdOffset;
           animateObject(
             this.swingRangeShape,
             startPos.clone(),
@@ -473,9 +566,9 @@ module.exports = Behavior({
             0,
             1,
             normalAnimDuration
-          )
-        })
-        this.setCameraAnimUdAndAnimate()
+          );
+        });
+        this.setCameraAnimUdAndAnimate();
       }
     },
     setCameraAnimHomeBackAndAnimate(lastTransformType) {
@@ -527,7 +620,7 @@ module.exports = Behavior({
     },
     transformHomeBack(lastTransformType, type) {
       let startPos;
-      if (!lastTransformType) return
+      if (!lastTransformType) return;
       // home=>homeBack
       // ud=>homeBack
       // swingOn=>homeBack
@@ -577,8 +670,8 @@ module.exports = Behavior({
         // this.upPanel.show = false;
         // this.lookPanel.show = false;
         this.setData({
-          'switchObj.show': false,
-          'upPanel.show': false,
+          "switchObj.show": false,
+          "upPanel.show": false,
           "lookPanel.show": false,
         });
       });
@@ -1671,8 +1764,8 @@ module.exports = Behavior({
       this.startTime = new Date().getTime();
 
       this.setData({
-        activeTab: 'lr'
-      })
+        activeTab: "lr",
+      });
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
