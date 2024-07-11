@@ -285,6 +285,120 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    createCurrentRangePlane(r, up, down) {
+      const geometry = new THREE.CircleGeometry(r, 32, down, up - down)
+
+      //纹理贴图加载器TextureLoader
+      const texLoader = new THREE.TextureLoader()
+      // .load()方法加载图像，返回一个纹理对象Texture
+      const texture = texLoader.load('./assets/textures/range_1.png?v=2')
+      texture.colorSpace = THREE.SRGBColorSpace
+      const material = new THREE.MeshBasicMaterial({
+        // 设置纹理贴图：Texture对象作为材质map属性的属性值
+        map: texture, //map表示材质的颜色贴图属性
+        transparent: true,
+        side: THREE.DoubleSide,
+      })
+      return new THREE.Mesh(geometry, material)
+    },
+    initShapeAndSphere(swingRangeRadius, down, up, totalAngle = 120) {
+      const plane = this.createCurrentRangePlane(swingRangeRadius, up, down);
+
+      const { plane_1, material_1 } = this.createRangePlane1(
+        swingRangeRadius,
+        down,
+        up,
+        totalAngle
+      );
+
+      const geometry_4 = new THREE.CircleGeometry(
+        swingRangeRadius,
+        32,
+        up,
+        (Math.PI / 180) * (totalAngle / 2) - up
+      );
+      const plane_2 = new THREE.Mesh(geometry_4, material_1);
+
+      const sphereRadius = 0.02;
+      this.sphereRadius = sphereRadius;
+
+      let sphere = this.createSphere(sphereRadius, swingRangeRadius, down);
+
+      const geometry_3 = new THREE.SphereGeometry(sphereRadius, 32, 32);
+      const material_3 = new THREE.MeshBasicMaterial({
+        color: 0x00cbb8,
+        transparent: true,
+        opacity: 1,
+      });
+      const sphere_1 = new THREE.Mesh(geometry_3, material_3);
+      sphere_1.position.set(
+        swingRangeRadius * Math.cos(up),
+        swingRangeRadius * Math.sin(up),
+        sphereRadius / 2
+      );
+
+      this.addShapeHelper(totalAngle, swingRangeRadius, sphereRadius);
+
+      return { plane, plane_1, plane_2, sphere, sphere_1 };
+    },
+    addUdObjects() {
+      const swingRangeRadius = 0.3;
+      this.swingRangeRadius = swingRangeRadius;
+
+      let displayAngle = Math.max(this.swingChangeSettingObj.ud_swing_angle, 5);
+
+      const totalAngle = 135;
+      const up = ((Math.PI / 180) * displayAngle) / 2;
+      const down = -((Math.PI / 180) * displayAngle) / 2;
+
+      const { plane, plane_1, plane_2 } = this.initShapeAndSphere(
+        swingRangeRadius,
+        down,
+        up,
+        totalAngle
+      );
+      this.rangePlane = plane;
+      this.rangePlane_1 = plane_1;
+      this.rangePlane_2 = plane_2;
+
+      this.swingRangeShape = new THREE.Group();
+      this.swingRangeShape.add(plane_1);
+      this.swingRangeShape.add(plane_2);
+      this.swingRangeShape.add(plane);
+      // this.swingRangeShape.add(sphere)
+      // this.swingRangeShape.add(sphereRight)
+      // this.spheres = [sphere]
+      this.swingRangeShape.translateY(0.95);
+      // this.swingRangeShape.rotateX(Math.PI / 2)
+      // this.swingRangeShape.rotateZ(Math.PI / 2)
+      this.swingRangeShape.rotateOnWorldAxis(
+        new THREE.Vector3(0, 1, 0),
+        -Math.PI / 2
+      );
+      let v = new THREE.Vector3(0, 0, 3);
+      this.swingRangeShape.translateOnAxis(
+        this.swingRangeShape.worldToLocal(v),
+        0.07
+      );
+
+      // 塞到camera里，那就可以一直相对摄像头静止
+      this.camera.add(this.swingRangeShape);
+      this.swingRangeShape.matrix = newMUd.clone();
+      this.swingRangeShape.matrix.decompose(
+        this.swingRangeShape.position,
+        this.swingRangeShape.quaternion,
+        this.swingRangeShape.scale
+      );
+      // this.scene.add(this.swingRangeShape)
+      swingRangeShapeInitPosUd = this.swingRangeShape.position.clone();
+    },
+    seeUd() {
+      // 锁定参数
+      this.swingChangeSettingObj = JSON.parse(JSON.stringify(this.statusData));
+      this.seeingUd = true;
+      this.addUdObjects();
+      setOpacity(this.swingRangeShape, 0);
+    },
     reset2() {
       this.seeingSwingRange2 = false;
       this.swingRangeShape && this.swingRangeShape.removeFromParent();
@@ -383,7 +497,11 @@ module.exports = Behavior({
         } else {
           this.transformHomeNotLr(showSwingDegreeTipsTimeout);
         }
-        this.modelMaskStyleObj.height = pxToRem(400);
+        // TODO
+        // this.modelMaskStyleObj.height = pxToRem(400);
+        this.setData({
+          "modelMaskStyleObj.height": pxToRem(400),
+        });
       }
     },
     transform(type) {
