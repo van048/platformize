@@ -173,6 +173,8 @@ const calMatrix_1 = new THREE.Matrix4();
 const calVector = new THREE.Vector3();
 const calVector_1 = new THREE.Vector3();
 const calQuaternion = new THREE.Quaternion();
+const lrSpeed = 0.01
+let lrDirectionFlag = 1
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -371,10 +373,8 @@ const debugObj = {
     power: "on",
     gear: 1,
     ud_swing_angle: 60,
-    // swing_direction: 'ud',
-    swing_direction: "ud",
-    swing: "off",
-    // swing: 'off',
+    swing_direction: "udlr",
+    swing: "on",
     lr_diy_swing: "off",
     lr_diy_down_percent: 28,
     lr_diy_up_percent: 100,
@@ -416,6 +416,8 @@ module.exports = Behavior({
     },
 
     activeTab: "lr",
+    isLrSwinging: false,
+    statusData: {},
   },
   attached: function () {},
   methods: {
@@ -1513,7 +1515,10 @@ module.exports = Behavior({
       if (statusData.display_left_angle == 255) {
         statusData.display_left_angle = statusData.swing_angle;
       }
-      this.statusData = statusData;
+      // this.statusData = statusData;
+      this.setData({
+        statusData: statusData
+      })
     },
     threeMounted(canvas) {
       this.clock = new THREE.Clock();
@@ -1581,5 +1586,25 @@ module.exports = Behavior({
 
       window.addEventListener("resize", this.onWindowResize);
     },
+  },
+  observers: {
+    'activeTab': function(activeTab) {
+      this.activeTab = activeTab
+    },
+    'isLrSwinging': function(isLrSwinging) {
+      this.isLrSwinging = isLrSwinging
+    },
+    'statusData.**': function(statusData) {
+      this.statusData = statusData
+
+      this.setData({
+        isLrSwinging: (
+          statusData.power == 'on' &&
+          statusData.swing == 'on' &&
+          (statusData.swing_direction == 'lr' ||
+            statusData.swing_direction == 'udlr')
+        )
+      })
+    }
   },
 });
