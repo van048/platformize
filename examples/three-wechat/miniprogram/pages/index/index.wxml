@@ -2,10 +2,13 @@
 <view class="page" style="--anim-duration: 0.5s;">
   <canvas class="canvas {{showCanvas ? '' : 'hide'}}" id="gl" type="webgl" bindtouchstart="onTX" bindtouchmove="onTX" bindtouchend="onTX"></canvas>
   <view class="btn-group">
-    <button class="btn" bindtap="test">测试</button>
-    <button class="btn" bindtap="test2">测试2</button>
-    <button class="btn" bindtap="test3">测试3</button>
-    <button class="btn" bindtap="test4">测试4</button>
+    <button class="btn" bindtap="test">ud</button>
+    <button class="btn" bindtap="test2">home</button>
+    <button class="btn" bindtap="test3">homeBack</button>
+    <button class="btn" bindtap="test4">swingOff</button>
+    <button class="btn" bindtap="test5">swingOn</button>
+    <button class="btn" bindtap="test6">look</button>
+    <button class="btn" bindtap="test7">homeBackOff</button>
   </view>
   <view class="model-mask height-transition" style="height:{{modelMaskStyleObj.height}}"></view>
   <view class="up-switch-wrapper flex-rcc {{lookPanel.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" wx:if="lookPanel.show">

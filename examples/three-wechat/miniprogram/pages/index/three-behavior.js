@@ -419,6 +419,27 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    test() {
+      this.transform("ud");
+    },
+    test2() {
+      this.transform("home");
+    },
+    test3() {
+      this.transform("homeBack");
+    },
+    test4() {
+      this.transform("swingOff");
+    },
+    test5() {
+      this.transform("swingOn");
+    },
+    test6() {
+      this.transform("look");
+    },
+    test7() {
+      this.transform("homeBackOff");
+    },
     confirmChangeColor() {
       // 如果选择过，记录；没有选择过，保持原样
       this.selectedColor &&
@@ -927,9 +948,6 @@ module.exports = Behavior({
       setTimeout(() => {
         this.transforming = false;
       }, normalAnimDuration + 500);
-    },
-    test() {
-      this.transform("home");
     },
     resetLrDegAnim() {
       // 复位
@@ -1501,7 +1519,6 @@ module.exports = Behavior({
       this.clock = new THREE.Clock();
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
-      this.activeTab = this.data.activeTab;
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
