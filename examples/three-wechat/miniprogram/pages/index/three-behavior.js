@@ -231,6 +231,12 @@ let swingRangeShapeInitPos = new THREE.Vector3(
   -29.09964235721189
 );
 let swingRangeShapeInitPosOffset = 1;
+// 外观
+let lookAnimCamera = {
+  pos: null,
+  target: null,
+  light: null,
+};
 function pxToRem(px) {
   return px + "rpx";
 }
@@ -410,6 +416,47 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    startChangeColor() {
+      this.selectedColor = null;
+      this.changingColor = true;
+    },
+    transformLook(type) {
+      this.startChangeColor();
+      this.currentTransformType = type;
+      this.transforming = true;
+      // TODO
+      // this.modelMaskStyleObj.height = pxToRem(0)
+      this.setData({
+        "modelMaskStyleObj.height": pxToRem(0),
+      });
+
+      this.camera.getWorldDirection(calVector);
+      lookAnimCamera.pos = cameraAnimForwardHome.startPos
+        .clone()
+        .add(calVector.normalize().multiplyScalar(0.2));
+      lookAnimCamera.target = cameraAnimForwardHome.startTarget
+        .clone()
+        .add(new THREE.Vector3(0, 0.1, 0));
+      lookAnimCamera.light = cameraAnimForwardHome.startLight.clone();
+      animateCamera(
+        cameraAnimForwardHome.startPos.clone(),
+        cameraAnimForwardHome.startTarget.clone(),
+        cameraAnimForwardHome.startLight.clone(),
+        lookAnimCamera.pos.clone(),
+        lookAnimCamera.target.clone(),
+        lookAnimCamera.light.clone(),
+        normalAnimDuration / 2,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer
+      );
+      // TODO
+      // this.lookPanel.show = true
+      this.setData({
+        "lookPanel.show": true,
+      });
+    },
     addSwingRangeObjects() {
       const swingRangeRadius = 0.3;
       this.swingRangeRadius = swingRangeRadius;
