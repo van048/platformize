@@ -3,6 +3,7 @@ var three = THREE;
 var screenshot = require("../../chunks/screenshot.js");
 var window, requestAnimationFrame;
 var GLTFLoader = screenshot.GLTFLoader;
+var performance = Date;
 // @ts-nocheck
 // This file is part of meshoptimizer library and is distributed under the terms of MIT License.
 // Copyright (C) 2016-2020, by Arseny Kapoulkine (arseny.kapoulkine@gmail.com)
@@ -286,20 +287,20 @@ module.exports = Behavior({
   attached: function () {},
   methods: {
     createCurrentRangePlane(r, up, down) {
-      const geometry = new THREE.CircleGeometry(r, 32, down, up - down)
+      const geometry = new THREE.CircleGeometry(r, 32, down, up - down);
 
       //纹理贴图加载器TextureLoader
-      const texLoader = new THREE.TextureLoader()
+      const texLoader = new THREE.TextureLoader();
       // .load()方法加载图像，返回一个纹理对象Texture
-      const texture = texLoader.load('./assets/textures/range_1.png?v=2')
-      texture.colorSpace = THREE.SRGBColorSpace
+      const texture = texLoader.load("./assets/textures/range_1.png?v=2");
+      texture.colorSpace = THREE.SRGBColorSpace;
       const material = new THREE.MeshBasicMaterial({
         // 设置纹理贴图：Texture对象作为材质map属性的属性值
         map: texture, //map表示材质的颜色贴图属性
         transparent: true,
         side: THREE.DoubleSide,
-      })
-      return new THREE.Mesh(geometry, material)
+      });
+      return new THREE.Mesh(geometry, material);
     },
     initShapeAndSphere(swingRangeRadius, down, up, totalAngle = 120) {
       const plane = this.createCurrentRangePlane(swingRangeRadius, up, down);
