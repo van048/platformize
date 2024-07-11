@@ -181,6 +181,25 @@ let cameraAnimUd = {
   endLight: new THREE.Vector3(0, 0.6, 4).add(new THREE.Vector3(2.93, 0, -1.49)),
 };
 let normalAnimDuration = ((1000 / 24) * 20) / 1.5;
+let sphereRight; // 扇形的最右端的一个点
+// 上下
+// 转到侧面时摄像机的matrix
+let cameraCeMianMatrix = new THREE.Matrix4().fromArray([
+  0.011272813674444363, -4.336809383831408e-20, -0.09936260298453094, 0,
+  0.0004622545581642977, 0.09999892684632541, 0.000052443367502761376, 0,
+  0.0993615128243416, -0.0004652198928570993, 0.011272689994384459, 0, 2.956797,
+  0.5861559999999999, 0.43545237999999986, 1,
+]);
+// 作为scene的子对象时，转到侧面时扇形的matrix
+let swingRangeShapeCeMianMatrix = new THREE.Matrix4().fromArray([
+  2.220446049250313e-16, 0, 1, 0, 0, 1, 0, 0, -1, 0, 2.220446049250313e-16, 0,
+  -3.1086244689504386e-17, 0.8835, 0.21000000000000005, 1,
+]);
+// 作为camera的子对象时，扇形的matrix
+let newMUd = swingRangeShapeCeMianMatrix
+  .clone()
+  .premultiply(cameraCeMianMatrix.clone().invert());
+let swingRangeShapeInitPosUd;
 function pxToRem(px) {
   return px + "rpx";
 }
@@ -237,6 +256,22 @@ function animateCamera(
 
   tick();
 }
+function setOpacity(object, opacity) {
+  if (object instanceof THREE.Group) {
+    let group = object
+    group.traverse((child) => {
+      if (child.material) {
+        // 确保child是Mesh且有material属性
+        child.material.opacity = opacity
+        child.material.transparent = true // 确保是透明的，以便opacity生效
+      }
+    })
+  } else {
+    // 插值透明度
+    object.material.opacity = opacity
+    object.material.transparent = true // 确保是透明的，以便opacity生效
+  }
+}
 
 // 调试开关
 const debugObj = {
@@ -286,6 +321,60 @@ module.exports = Behavior({
   },
   attached: function () {},
   methods: {
+    addShapeHelper(totalAngle, swingRangeRadius, sphereRadius) {
+      // 辅助用，用于定位扇形最右端
+      const geometry_2 = new THREE.SphereGeometry(0.000001, 32, 32);
+      const material_2 = new THREE.MeshBasicMaterial({
+        color: "#FFFFFF",
+        transparent: true,
+        opacity: 0,
+      });
+      sphereRight = new THREE.Mesh(geometry_2, material_2);
+      let end = (Math.PI / 180) * ((totalAngle / 100) * 0 - totalAngle / 2);
+      sphereRight.position.set(
+        swingRangeRadius * Math.cos(end),
+        swingRangeRadius * Math.sin(end),
+        sphereRadius / 2
+      );
+    },
+    createSphere(sphereRadius, swingRangeRadius, down) {
+      const geometry_2 = new THREE.SphereGeometry(sphereRadius, 32, 32);
+      const material_2 = new THREE.MeshBasicMaterial({
+        color: 0x00cbb8,
+        transparent: true,
+        opacity: 1,
+      });
+      const sphere = new THREE.Mesh(geometry_2, material_2);
+      sphere.position.set(
+        swingRangeRadius * Math.cos(down),
+        swingRangeRadius * Math.sin(down),
+        sphereRadius / 2
+      );
+      return sphere;
+    },
+    createRangePlane1(swingRangeRadius, down, up, totalAngle) {
+      const geometry_1 = new THREE.CircleGeometry(
+        swingRangeRadius,
+        32,
+        (Math.PI / 180) * (0 - totalAngle / 2),
+        down - (Math.PI / 180) * (0 - totalAngle / 2)
+      );
+      //纹理贴图加载器TextureLoader
+      const texLoader = new THREE.TextureLoader();
+      // .load()方法加载图像，返回一个纹理对象Texture
+      // const texture = texLoader.load("./assets/textures/range_2.png?v=4");
+      const texture = texLoader.load(
+        "https://ce-cdn.midea.com/activity/sit/3D/textures/range_2.png"
+      );
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const material_1 = new THREE.MeshBasicMaterial({
+        // 设置纹理贴图：Texture对象作为材质map属性的属性值
+        map: texture, //map表示材质的颜色贴图属性
+        transparent: true,
+        side: THREE.DoubleSide,
+      });
+      return { plane_1: new THREE.Mesh(geometry_1, material_1), material_1 };
+    },
     createCurrentRangePlane(r, up, down) {
       const geometry = new THREE.CircleGeometry(r, 32, down, up - down);
 
