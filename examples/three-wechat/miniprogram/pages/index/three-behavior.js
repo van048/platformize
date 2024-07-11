@@ -375,6 +375,8 @@ module.exports = Behavior({
       show: false,
       options: [0, 30, 60, 135],
     },
+
+    activeTab: "lr",
   },
   attached: function () {},
   methods: {
@@ -1272,6 +1274,7 @@ module.exports = Behavior({
       this.clock = new THREE.Clock();
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
+      this.activeTab = this.data.activeTab;
 
       const platform = new screenshot.WechatPlatform(canvas);
       this.platform = platform;
