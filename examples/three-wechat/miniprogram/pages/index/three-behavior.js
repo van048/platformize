@@ -200,6 +200,7 @@ let newMUd = swingRangeShapeCeMianMatrix
   .clone()
   .premultiply(cameraCeMianMatrix.clone().invert());
 let swingRangeShapeInitPosUd;
+let swingRangeShapeInitPosUdOffset = -0.5;
 function pxToRem(px) {
   return px + "rpx";
 }
@@ -258,19 +259,62 @@ function animateCamera(
 }
 function setOpacity(object, opacity) {
   if (object instanceof THREE.Group) {
-    let group = object
+    let group = object;
     group.traverse((child) => {
       if (child.material) {
         // 确保child是Mesh且有material属性
-        child.material.opacity = opacity
-        child.material.transparent = true // 确保是透明的，以便opacity生效
+        child.material.opacity = opacity;
+        child.material.transparent = true; // 确保是透明的，以便opacity生效
       }
-    })
+    });
   } else {
     // 插值透明度
-    object.material.opacity = opacity
-    object.material.transparent = true // 确保是透明的，以便opacity生效
+    object.material.opacity = opacity;
+    object.material.transparent = true; // 确保是透明的，以便opacity生效
   }
+}
+// 封装动画函数
+function animateObject(
+  object,
+  startPosition,
+  targetPosition,
+  startOpacity,
+  targetOpacity,
+  duration,
+  callback,
+  easing = linearEasing
+) {
+  if (!object) return;
+  const start = performance.now();
+
+  const animate = () => {
+    const now = performance.now();
+    const elapsedTime = now - start;
+    const progress = elapsedTime / duration;
+
+    if (progress < 1) {
+      // 使用提供的easing函数来计算插值
+      const easedProgress = easing(progress);
+
+      // 插值位置
+      object.position.lerpVectors(startPosition, targetPosition, easedProgress);
+      setOpacity(
+        object,
+        startOpacity + (targetOpacity - startOpacity) * easedProgress
+      );
+
+      // 继续动画
+      requestAnimationFrame(animate);
+    } else {
+      // 动画结束，设置最终位置和透明度
+      object.position.copy(targetPosition);
+      setOpacity(object, targetOpacity);
+      callback && callback();
+    }
+  };
+
+  // 开始动画
+  requestAnimationFrame(animate);
 }
 
 // 调试开关
@@ -321,10 +365,10 @@ module.exports = Behavior({
     switchObj: {
       show: false,
       // icon: require('../assets/image/icon/icon-switch-on.png'),
-      icon: '',
-      statusText: '',
+      icon: "",
+      statusText: "",
       // value: 'on',
-      value: '',
+      value: "",
     },
 
     upPanel: {
@@ -555,9 +599,9 @@ module.exports = Behavior({
         // this.switchObj.show = false;
         // this.upPanel.show = true;
         this.setData({
-          'switchObj.show': false,
-          'upPanel.show': false,
-        })
+          "switchObj.show": false,
+          "upPanel.show": false,
+        });
 
         startPos = swingRangeShapeInitPosUd.clone();
         startPos.y += swingRangeShapeInitPosUdOffset;
@@ -904,8 +948,8 @@ module.exports = Behavior({
       // TODO
       // this.lookPanel.activeOption = color;
       this.setData({
-        'lookPanel.activeOption': color
-      })
+        "lookPanel.activeOption": color,
+      });
     },
     initLrGroup() {
       this.lrGroupObj = this.group.find((it) => it.desc == "左右摇柄");
