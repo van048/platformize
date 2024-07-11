@@ -173,8 +173,8 @@ const calMatrix_1 = new THREE.Matrix4();
 const calVector = new THREE.Vector3();
 const calVector_1 = new THREE.Vector3();
 const calQuaternion = new THREE.Quaternion();
-const lrSpeed = 0.01
-let lrDirectionFlag = 1
+const lrSpeed = 0.01;
+let lrDirectionFlag = 1;
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -441,6 +441,114 @@ module.exports = Behavior({
     },
     test7() {
       this.transform("homeBackOff");
+    },
+    setCameraAnimHomeBackAndAnimate(lastTransformType) {
+      let durationScale = 1;
+      let cameraAnimNow = {
+        pos: cameraAnimForwardHome.endPos,
+        target: cameraAnimForwardHome.endTarget,
+        light: cameraAnimForwardHome.endLight,
+        initPos: swingRangeShapeInitPos,
+      };
+      if (lastTransformType === "ud") {
+        cameraAnimNow = {
+          pos: cameraAnimUd.endPos,
+          target: cameraAnimUd.endTarget,
+          light: cameraAnimUd.endLight,
+          initPos: swingRangeShapeInitPosUd,
+        };
+      } else if (lastTransformType === "look") {
+        cameraAnimNow = {
+          pos: lookAnimCamera.pos,
+          target: lookAnimCamera.target,
+          light: lookAnimCamera.light,
+        };
+        durationScale = 0.5;
+      } else if (
+        lastTransformType === null ||
+        lastTransformType == "homeBackOff"
+      ) {
+        cameraAnimNow = {
+          pos: cameraInitPosOff,
+          target: cameraInitTargetOff,
+          light: cameraAnimForwardHome.startLight,
+        };
+      }
+      animateCamera(
+        cameraAnimNow.pos.clone(),
+        cameraAnimNow.target.clone(),
+        cameraAnimNow.light.clone(),
+        cameraAnimForwardHome.startPos.clone(),
+        cameraAnimForwardHome.startTarget.clone(),
+        cameraAnimForwardHome.startLight.clone(),
+        normalAnimDuration * durationScale,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer
+      );
+      return cameraAnimNow;
+    },
+    transformHomeBack(lastTransformType, type) {
+      let startPos;
+      // home=>homeBack
+      // ud=>homeBack
+      // swingOn=>homeBack
+      // swingOff=>homeBack
+      if (lastTransformType == "swingOff") {
+        this.swingFixDegreeTipsTransitionName = "fade-slide-y";
+      }
+      this.currentTransformType = type;
+      this.transforming = true;
+      if (lastTransformType == null || lastTransformType == "homeBackOff") {
+        // 关机到开机
+        this.setCameraAnimHomeBackAndAnimate(lastTransformType);
+        return;
+      }
+      let cameraAnimNow =
+        this.setCameraAnimHomeBackAndAnimate(lastTransformType);
+      if (lastTransformType === "ud") {
+        startPos = swingRangeShapeInitPosUd.clone();
+        startPos.y += swingRangeShapeInitPosUdOffset;
+      } else {
+        startPos = swingRangeShapeInitPos.clone();
+        startPos.y += swingRangeShapeInitPosOffset;
+      }
+      this.swingRangeShape &&
+        animateObject(
+          this.swingRangeShape,
+          cameraAnimNow.initPos.clone(),
+          startPos.clone(),
+          1,
+          0,
+          normalAnimDuration,
+          () => {
+            this.reset2();
+            this.reset();
+          }
+        );
+      if (lastTransformType === "ud") {
+        this.udDegreeTipsTransitionName = "fade-slide-y";
+      }
+      this.$nextTick(() => {
+        this.changingColor = false;
+        this.showSwingDegreeTab = false;
+        this.showSwingDegreeTips = false;
+        this.showFixDegreeTips = false;
+        this.showUdDegreeTips = false;
+        // this.switchObj.show = false;
+        // this.upPanel.show = false;
+        // this.lookPanel.show = false;
+        this.setData({
+          'switchObj.show': false,
+          'upPanel.show': false,
+          "lookPanel.show": false,
+        });
+      });
+      // this.modelMaskStyleObj.height = pxToRem(400)
+      this.setData({
+        "modelMaskStyleObj.height": pxToRem(400),
+      });
     },
     confirmChangeColor() {
       // 如果选择过，记录；没有选择过，保持原样
@@ -1517,8 +1625,8 @@ module.exports = Behavior({
       }
       // this.statusData = statusData;
       this.setData({
-        statusData: statusData
-      })
+        statusData: statusData,
+      });
     },
     threeMounted(canvas) {
       this.clock = new THREE.Clock();
@@ -1588,23 +1696,22 @@ module.exports = Behavior({
     },
   },
   observers: {
-    'activeTab': function(activeTab) {
-      this.activeTab = activeTab
+    activeTab: function (activeTab) {
+      this.activeTab = activeTab;
     },
-    'isLrSwinging': function(isLrSwinging) {
-      this.isLrSwinging = isLrSwinging
+    isLrSwinging: function (isLrSwinging) {
+      this.isLrSwinging = isLrSwinging;
     },
-    'statusData.**': function(statusData) {
-      this.statusData = statusData
+    "statusData.**": function (statusData) {
+      this.statusData = statusData;
 
       this.setData({
-        isLrSwinging: (
-          statusData.power == 'on' &&
-          statusData.swing == 'on' &&
-          (statusData.swing_direction == 'lr' ||
-            statusData.swing_direction == 'udlr')
-        )
-      })
-    }
+        isLrSwinging:
+          statusData.power == "on" &&
+          statusData.swing == "on" &&
+          (statusData.swing_direction == "lr" ||
+            statusData.swing_direction == "udlr"),
+      });
+    },
   },
 });
