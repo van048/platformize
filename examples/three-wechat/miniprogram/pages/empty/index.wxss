@@ -12,7 +12,7 @@
   left:0;
   top:0;
   width:750rpx;
-  height:750rpx;
+  height:1280rpx;
   z-index:0;
   overflow: hidden;
 }

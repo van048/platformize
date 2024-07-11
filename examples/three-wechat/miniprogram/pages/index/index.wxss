@@ -3,8 +3,8 @@
 .page {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
+  width:750rpx;
+  height:1280rpx;
   overflow: hidden;
   position: fixed;
   z-index: 0;
@@ -99,4 +99,34 @@
 
 .btn-screenrecord {
   bottom: 130rpx;
+}
+.btn-group {
+  z-index: 1;
+  position: fixed;
+  right: 16px;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.btn {
+  background-color: gray;
+  color: #ffffff;
+  font-size: 16px;
+  padding: 2px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.model-mask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: url("https://ce-cdn.midea.com/activity/sit/3D/image/bg-mask.png");
+  background-size: 100% 100%;
+  z-index: 1;
+}
+.height-transition {
+  transition: height 1s;
 }

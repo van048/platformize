@@ -1,6 +1,11 @@
-<!--index.wxml-->
+<!-- index.wxml -->
 <view class="page">
-  <canvas class="canvas {{showCanvas ? '' : 'hide'}}" id="gl" type="webgl" bindtouchstart="onTX" bindtouchmove="onTX"
-    bindtouchend="onTX">
-  </canvas>
+  <canvas class="canvas {{showCanvas ? '' : 'hide'}}" id="gl" type="webgl" bindtouchstart="onTX" bindtouchmove="onTX" bindtouchend="onTX"></canvas>
+  <view class="btn-group">
+    <button class="btn" bindtap="test">测试</button>
+    <button class="btn" bindtap="test2">测试2</button>
+    <button class="btn" bindtap="test3">测试3</button>
+    <button class="btn" bindtap="test4">测试4</button>
+  </view>
+  <view class="model-mask height-transition" style="height:{{modelMaskStyleObj.height}}"></view>
 </view>

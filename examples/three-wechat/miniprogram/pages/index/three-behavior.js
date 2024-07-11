@@ -173,6 +173,11 @@ const calQuaternion = new THREE.Quaternion();
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
 
+// transform
+function pxToRem(px) {
+  return px + "rpx";
+}
+
 // 调试开关
 const debugObj = {
   gui: false,
@@ -213,6 +218,10 @@ module.exports = Behavior({
       show: false,
       options: ["#B4E7F0", "#93EBC0", "#E9DD90", "#FFFFFF"],
       activeOption: "#FFFFFF",
+    },
+
+    modelMaskStyleObj: {
+      height: pxToRem(400),
     },
   },
   attached: function () {},
@@ -621,7 +630,8 @@ module.exports = Behavior({
      * 使用模型里的相机作为场景的相机
      */
     initCameraInModel(child) {
-      const aspectRatio = window.innerWidth / window.innerHeight;
+      // const aspectRatio = window.innerWidth / window.innerHeight;
+      const aspectRatio = 750 / 1280;
       console.log("initCameraInModel", child);
       // 删除现有camera
       if (this.camera) this.camera.removeFromParent();
