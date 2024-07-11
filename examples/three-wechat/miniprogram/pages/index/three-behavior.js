@@ -318,6 +318,19 @@ module.exports = Behavior({
     modelMaskStyleObj: {
       height: pxToRem(400),
     },
+    switchObj: {
+      show: false,
+      // icon: require('../assets/image/icon/icon-switch-on.png'),
+      icon: '',
+      statusText: '',
+      // value: 'on',
+      value: '',
+    },
+
+    upPanel: {
+      show: false,
+      options: [0, 30, 60, 135],
+    },
   },
   attached: function () {},
   methods: {
@@ -538,8 +551,13 @@ module.exports = Behavior({
         this.seeUd();
         this.showSwingDegreeTips = false;
         this.showFixDegreeTips = false;
-        this.switchObj.show = false;
-        this.upPanel.show = true;
+        // TODO
+        // this.switchObj.show = false;
+        // this.upPanel.show = true;
+        this.setData({
+          'switchObj.show': false,
+          'upPanel.show': false,
+        })
 
         startPos = swingRangeShapeInitPosUd.clone();
         startPos.y += swingRangeShapeInitPosUdOffset;
