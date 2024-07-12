@@ -540,6 +540,39 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    // TODO
+    onWeexData(event) {
+      let weexData = event.data;
+      let r;
+      switch (weexData.messageType) {
+        case "IS_IOS":
+          r = JSON.parse(weexData.payload);
+          this.setIsIOS(r.isIOS);
+          this.tryTellThreeLoaded();
+          break;
+        case "STATUS":
+          r = JSON.parse(weexData.payload);
+          this.updateStatus(r);
+          break;
+        case "TRANSFORM":
+          r = weexData.payload;
+          this.transform(r);
+          break;
+        case "CONTROL_LOADING_SHOW":
+          this.showLoadingApng();
+          break;
+        case "CONTROL_LOADING_HIDE":
+          this.hideLoadingApng();
+          break;
+      }
+    },
+    hideLoadingApng() {
+      this.controlLoading = false;
+      this.loadingType = null;
+    },
+    showLoadingApng() {
+      this.controlLoading = true;
+    },
     updateLrDiyPercent() {
       if (!this.isLrSwinging) return;
       this.swingChangeSettingObj.lr_diy_up_percent =
@@ -1639,8 +1672,6 @@ module.exports = Behavior({
     },
     selectColor(color) {
       this.selectedColor = color;
-      // TODO
-      // this.lookPanel.activeOption = this.selectedColor
       this.setData({
         "lookPanel.activeOption": this.selectedColor,
       });
@@ -1663,8 +1694,6 @@ module.exports = Behavior({
       this.setData({
         transforming: true,
       });
-      // TODO
-      // this.modelMaskStyleObj.height = pxToRem(0)
       this.setData({
         "modelMaskStyleObj.height": pxToRem(0),
       });
@@ -1690,8 +1719,6 @@ module.exports = Behavior({
         light,
         this.renderer
       );
-      // TODO
-      // this.lookPanel.show = true
       this.setData({
         "lookPanel.show": true,
       });
@@ -2116,8 +2143,6 @@ module.exports = Behavior({
         } else {
           this.transformHomeNotLr(showSwingDegreeTipsTimeout);
         }
-        // TODO
-        // this.modelMaskStyleObj.height = pxToRem(400);
         this.setData({
           "modelMaskStyleObj.height": pxToRem(400),
         });
@@ -2410,8 +2435,6 @@ module.exports = Behavior({
     initColor() {
       let color = localStorage.getItem(customColorKey) || "#FFFFFF";
       light.color = this.convertColor(color);
-      // TODO
-      // this.lookPanel.activeOption = color;
       this.setData({
         "lookPanel.activeOption": color,
       });
@@ -2880,7 +2903,7 @@ module.exports = Behavior({
         this.updateTargetAngle();
       }
       if (this.seeingSwingRange2) {
-        this.updateLrDiyPercent()
+        this.updateLrDiyPercent();
       }
     },
   },
