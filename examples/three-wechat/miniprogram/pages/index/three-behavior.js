@@ -175,6 +175,9 @@ const calVector_1 = new THREE.Vector3();
 const calQuaternion = new THREE.Quaternion();
 const lrSpeed = 0.01;
 let lrDirectionFlag = 1;
+// 头部拖动中标志
+let draggingHead;
+let draggingSphere;
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -443,6 +446,13 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    reset() {
+      this.seeingSwingRange = false;
+      draggingHead = false;
+      this.swingRangeShape && this.swingRangeShape.removeFromParent();
+      this.lrGroup.remove(draggingSphere);
+      this.swingRangeShape = null;
+    },
     transformHomeBackOff(lastTransformType, type) {
       // 先只考虑特定情况
       if (lastTransformType != "homeBack" && lastTransformType != null) return;
@@ -938,6 +948,7 @@ module.exports = Behavior({
         "https://ce-cdn.midea.com/activity/sit/3D/textures/range_2.png"
       );
       texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.NearestFilter;
       const material_1 = new THREE.MeshBasicMaterial({
         // 设置纹理贴图：Texture对象作为材质map属性的属性值
         map: texture, //map表示材质的颜色贴图属性
@@ -956,6 +967,7 @@ module.exports = Behavior({
       const texture = texLoader.load(
         "https://ce-cdn.midea.com/activity/sit/3D/textures/range_1.png"
       );
+      texture.minFilter = THREE.NearestFilter;
       texture.colorSpace = THREE.SRGBColorSpace;
       const material = new THREE.MeshBasicMaterial({
         // 设置纹理贴图：Texture对象作为材质map属性的属性值
