@@ -481,6 +481,7 @@ module.exports = Behavior({
 
     activeTab: "lr",
     isLrSwinging: false,
+    isLrFocus: false,
     statusData: {},
     tabList: [
       { id: "lr", title: "左右" },
@@ -491,6 +492,15 @@ module.exports = Behavior({
     showSwingDegreeTips: false,
     swingDegreeTipsTransitionName: "fade-slide-y",
     tips2: "",
+    loadingType: null,
+    controlLoading: false,
+    loadingBgColor: "#00cbb8",
+    loadingIconWhite:
+      "https://ce-cdn.midea.com/activity/sit/3D/image/loading_white.png",
+    loadingIconGray:
+      "https://ce-cdn.midea.com/activity/sit/3D/image/loading_gray.png",
+    loadingIcon:
+      "https://ce-cdn.midea.com/activity/sit/3D/image/loading_white.png",
   },
   attached: function () {},
   methods: {
@@ -516,6 +526,56 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    updateSwitchObj() {
+      if (this.isLrSwinging) {
+        this.setData({
+          switchObj: {
+            statusText: "已开启",
+            value: "on",
+            icon: "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-on.png",
+          },
+        });
+      } else if (this.isLrFocus) {
+        this.setData({
+          switchObj: {
+            statusText: "已关闭",
+            value: "off",
+            icon: "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-off.png",
+          },
+        });
+      }
+    },
+    toggleSwingSwitch() {
+      // 动画中
+      if (this.transforming) return;
+      if (isPC()) {
+        if (this.switchObj.value == "on") {
+          debugObj.mockStatusObj.swing = "off";
+          debugObj.mockStatusObj.lr_diy_swing = "off";
+          debugObj.mockStatusObj.target_angle = (30 / 120) * 100;
+        } else {
+          debugObj.mockStatusObj.swing = "on";
+          debugObj.mockStatusObj.swing_direction = "lr";
+        }
+        this.updateStatus(debugObj.mockStatusObj);
+      } else {
+        const that = this;
+        this.setData({
+          loadingType: "toggleSwingSwitch",
+          loadingBgColor: that.switchObj.value === "on" ? "#00cbb8" : "#f2f2f2",
+          loadingIcon:
+            that.switchObj.value === "on"
+              ? this.loadingIconWhite
+              : this.loadingIconGray,
+        });
+        this.postDataToWeex({
+          type: "toggleSwingSwitch",
+          value: JSON.stringify({
+            targetValue: that.switchObj.value === "on" ? "off" : "on",
+          }),
+        });
+      }
+    },
     updateComputed() {
       let tips2 = () => {
         let text = "";
@@ -2471,6 +2531,9 @@ module.exports = Behavior({
     "lookPanel.**": function (lookPanel) {
       this.lookPanel = lookPanel;
     },
+    "switchObj.**": function (switchObj) {
+      this.switchObj = switchObj;
+    },
     activeTab: function (activeTab) {
       this.activeTab = activeTab;
     },
@@ -2479,16 +2542,23 @@ module.exports = Behavior({
     },
     isLrSwinging: function (isLrSwinging) {
       this.isLrSwinging = isLrSwinging;
+      this.updateSwitchObj();
+    },
+    isLrFocus: function (isLrFocus) {
+      this.isLrFocus = isLrFocus;
+      this.updateSwitchObj();
     },
     "statusData.**": function (statusData) {
       this.statusData = statusData;
 
+      let isLrSwinging =
+        statusData.power == "on" &&
+        statusData.swing == "on" &&
+        (statusData.swing_direction == "lr" ||
+          statusData.swing_direction == "udlr");
       this.setData({
-        isLrSwinging:
-          statusData.power == "on" &&
-          statusData.swing == "on" &&
-          (statusData.swing_direction == "lr" ||
-            statusData.swing_direction == "udlr"),
+        isLrSwinging,
+        isLrFocus: statusData.power == "on" && !isLrSwinging,
       });
     },
   },

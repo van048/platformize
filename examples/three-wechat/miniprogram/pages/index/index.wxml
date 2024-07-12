@@ -23,4 +23,15 @@
     <text class="swing-degree">{{ tips2 }}</text>
     <text class="swing-degree-label">左右摇头范围</text>
   </view>
+  <view class="switch-wrapper {{switchObj.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" bindtap="toggleSwingSwitch">
+    <view wx:if="{{loadingType == 'toggleSwingSwitch' && controlLoading}}" class="loading-bg flex-ccc" style="background: {{loadingBgColor }}">
+      <image class="loading" src="{{loadingIcon}}" />
+    </view>
+    <image wx:else src="{{switchObj.icon}}" class="switch-icon" style="opacity: {{switchObj.icon ? 1 : 0 }}" />
+    <view class="switch-label-wrapper">
+      <text class="switch-label">左右摇头</text>
+      <view class="switch-label-line"></view>
+      <text class="switch-label">{{ switchObj.statusText }}</text>
+    </view>
+  </view>
 </view>
