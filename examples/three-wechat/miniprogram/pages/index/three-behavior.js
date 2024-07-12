@@ -488,6 +488,9 @@ module.exports = Behavior({
     ],
     showSwingDegreeTab: false,
     transforming: false,
+    showSwingDegreeTips: false,
+    swingDegreeTipsTransitionName: "fade-slide-y",
+    tips2: "",
   },
   attached: function () {},
   methods: {
@@ -513,6 +516,16 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    updateComputed() {
+      let tips2 = () => {
+        let text = "";
+        text = this.swingChangeSettingObj.display_left_angle + "°";
+        return text;
+      };
+      this.setData({
+        tips2: tips2(),
+      });
+    },
     setCameraAnimUdAndAnimate() {
       cameraAnimUd.endPos = cameraAnimForwardHome.endPos
         .clone()
@@ -756,6 +769,7 @@ module.exports = Behavior({
               this.swingChangeSettingObj.lr_diy_down_percent)
         )
       );
+      this.updateComputed();
     },
     handleTouchMove2(event) {
       if (!draggingSphere) return;
@@ -810,6 +824,7 @@ module.exports = Behavior({
               this.swingChangeSettingObj.lr_diy_down_percent)
         )
       );
+      this.updateComputed();
     },
     onTouchEnd() {
       if (this.seeingSwingRange) {
@@ -961,7 +976,9 @@ module.exports = Behavior({
         this.reset2();
         this.seeSwingRange();
         setOpacity(this.swingRangeShape, 1);
-        this.showSwingDegreeTips = false;
+        this.setData({
+          showSwingDegreeTips: false,
+        });
         this.showFixDegreeTips = true;
         // this.transforming = true
         // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
@@ -1006,9 +1023,9 @@ module.exports = Behavior({
           setOpacity(this.swingRangeShape, 1);
           this.setData({
             transforming: true,
+            showSwingDegreeTips: true,
           });
           this.showFixDegreeTips = false;
-          this.showSwingDegreeTips = true;
           // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
           //   .clone()
           //   .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))
@@ -1086,6 +1103,7 @@ module.exports = Behavior({
       this.swingChangeSettingObj = JSON.parse(JSON.stringify(this.statusData));
       this.seeingSwingRange2 = true;
       this.addSwingRangeObjects2();
+      this.updateComputed();
     },
     transformHomeLrSwinging(showSwingDegreeTipsTimeout, cameraAnimNow) {
       this.seeSwingRange2();
@@ -1117,7 +1135,9 @@ module.exports = Behavior({
         normalAnimDuration
       );
       setTimeout(() => {
-        this.showSwingDegreeTips = true;
+        this.setData({
+          showSwingDegreeTips: true,
+        });
       }, showSwingDegreeTipsTimeout);
       setTimeout(() => {
         // this.switchObj.show = true;
@@ -1139,17 +1159,17 @@ module.exports = Behavior({
         this.currentTransformType = type;
         this.setData({
           transforming: true,
+          swingDegreeTipsTransitionName: "fade-slide-x",
         });
-        this.swingDegreeTipsTransitionName = "fade-slide-x";
         this.swingFixDegreeTipsTransitionName = "fade-slide-x";
         this.$nextTick(() => {
           this.seeUd();
           this.showUdDegreeTips = true;
-          this.showSwingDegreeTips = false;
           this.showFixDegreeTips = false;
           this.setData({
             "switchObj.show": false,
             "upPanel.show": true,
+            showSwingDegreeTips: false,
           });
 
           startPos = swingRangeShapeInitPosUd.clone();
@@ -1261,16 +1281,13 @@ module.exports = Behavior({
         this.setData({
           showSwingDegreeTab: false,
         });
-        this.showSwingDegreeTips = false;
         this.showFixDegreeTips = false;
         this.showUdDegreeTips = false;
-        // this.switchObj.show = false;
-        // this.upPanel.show = false;
-        // this.lookPanel.show = false;
         this.setData({
           "switchObj.show": false,
           "upPanel.show": false,
           "lookPanel.show": false,
+          showSwingDegreeTips: false,
         });
       });
       // this.modelMaskStyleObj.height = pxToRem(400)
@@ -1394,6 +1411,7 @@ module.exports = Behavior({
       this.swingChangeSettingObj = JSON.parse(JSON.stringify(this.statusData));
       this.seeingSwingRange = true;
       this.addSwingRangeObjects();
+      this.updateComputed();
     },
     addShapeHelper(totalAngle, swingRangeRadius, sphereRadius) {
       // 辅助用，用于定位扇形最右端
@@ -1567,6 +1585,7 @@ module.exports = Behavior({
       this.seeingUd = true;
       this.addUdObjects();
       setOpacity(this.swingRangeShape, 0);
+      this.updateComputed();
     },
     reset2() {
       this.seeingSwingRange2 = false;
@@ -1607,21 +1626,20 @@ module.exports = Behavior({
     transformHomeNotLr(showSwingDegreeTipsTimeout) {
       let startPos;
       this.currentTransformType = "ud";
-      this.swingDegreeTipsTransitionName = "fade-slide-x";
+      this.setData({
+        swingDegreeTipsTransitionName: "fade-slide-x",
+      });
       this.swingFixDegreeTipsTransitionName = "fade-slide-x";
       this.$nextTick(() => {
         this.setData({
           showSwingDegreeTab: true,
         });
         this.seeUd();
-        this.showSwingDegreeTips = false;
         this.showFixDegreeTips = false;
-        // TODO
-        // this.switchObj.show = false;
-        // this.upPanel.show = true;
         this.setData({
           "switchObj.show": false,
           "upPanel.show": false,
+          showSwingDegreeTips: false,
         });
 
         startPos = swingRangeShapeInitPosUd.clone();
@@ -1732,18 +1750,20 @@ module.exports = Behavior({
       ) {
         let showSwingDegreeTipsTimeout = 600;
         if (lastTransformType === "ud") {
-          this.swingDegreeTipsTransitionName = "fade-slide-x";
           this.swingFixDegreeTipsTransitionName = "fade-slide-x";
           showSwingDegreeTipsTimeout = 0;
           this.reset();
           this.reset2();
           this.setData({
             "upPanel.show": false,
+            swingDegreeTipsTransitionName: "fade-slide-x",
           });
         }
         if (lastTransformType == "homeBack") {
           this.udDegreeTipsTransitionName = "fade-slide-y";
-          this.swingDegreeTipsTransitionName = "fade-slide-y";
+          this.setData({
+            swingDegreeTipsTransitionName: "fade-slide-y",
+          });
           this.swingFixDegreeTipsTransitionName = "fade-slide-y";
         }
         this.currentTransformType = type;
@@ -1770,7 +1790,9 @@ module.exports = Behavior({
       let lastTransformType = this.currentTransformType;
       // console.log('lastTransformType', lastTransformType)
 
-      this.swingDegreeTipsTransitionName = "fade-slide-y";
+      this.setData({
+        swingDegreeTipsTransitionName: "fade-slide-y",
+      });
       this.swingFixDegreeTipsTransitionName = "fade-slide-y-fix";
       this.udDegreeTipsTransitionName = "fade-slide-ud";
       switch (type) {
