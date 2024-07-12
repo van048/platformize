@@ -16,4 +16,7 @@
       <view class="look-option-content" style="background: {{item}}"></view>
     </view>
   </view>
+  <view class="tab-wrapper {{showSwingDegreeTab?'fade-slide-y-tab-origin':'fade-slide-y-tab-enter'}}">
+    <Tab tabs="{{tabList}}" activeTabId="{{activeTab}}" bind:tabClicked="tabClicked" disable="{{transforming && !showSwingDegreeTab}}"></Tab>
+  </view>
 </view>

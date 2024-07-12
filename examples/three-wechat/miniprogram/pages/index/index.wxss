@@ -135,7 +135,7 @@
   left: 0;
   right: 0;
   bottom: 100px;
-  z-index:1;
+  z-index: 1;
 }
 
 .look-option {
@@ -177,5 +177,22 @@
 .fade-slide-y-switch-origin {
   opacity: 1;
   transform: translate(0, 0);
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
+}
+.tab-wrapper {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  margin-left: -74px;
+  z-index: 1;
+}
+.fade-slide-y-tab-enter {
+  opacity: 0;
+  transform: translateY(-20px); /* 初始位置向上偏移 */
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
+}
+.fade-slide-y-tab-origin {
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity var(--anim-duration), transform var(--anim-duration);
 }

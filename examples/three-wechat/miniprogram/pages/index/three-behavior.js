@@ -482,6 +482,11 @@ module.exports = Behavior({
     activeTab: "lr",
     isLrSwinging: false,
     statusData: {},
+    tabList: [
+      { id: "lr", title: "左右" },
+      { id: "ud", title: "上下" },
+    ],
+    showSwingDegreeTab: false,
   },
   attached: function () {},
   methods: {
@@ -507,6 +512,17 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    tabClicked(event) {
+      let tabId = event.detail.tabId;
+      this.setData({
+        activeTab: tabId,
+      });
+      if (tabId == "ud") {
+        this.transform("ud");
+      } else {
+        this.transform("home");
+      }
+    },
     tuneByUpDownDiff(angleOffset) {
       // down，右边的
       this.swingChangeSettingObj.lr_diy_down_percent = Math.max(
@@ -1036,7 +1052,9 @@ module.exports = Behavior({
     },
     transformHomeLrSwinging(showSwingDegreeTipsTimeout, cameraAnimNow) {
       this.seeSwingRange2();
-      this.showSwingDegreeTab = true;
+      this.setData({
+        showSwingDegreeTab: true,
+      });
       animateCamera(
         cameraAnimNow.pos.clone(),
         cameraAnimNow.target.clone(),
@@ -1197,7 +1215,9 @@ module.exports = Behavior({
       }
       this.$nextTick(() => {
         this.changingColor = false;
-        this.showSwingDegreeTab = false;
+        this.setData({
+          showSwingDegreeTab: false,
+        });
         this.showSwingDegreeTips = false;
         this.showFixDegreeTips = false;
         this.showUdDegreeTips = false;
@@ -1545,7 +1565,9 @@ module.exports = Behavior({
       this.swingDegreeTipsTransitionName = "fade-slide-x";
       this.swingFixDegreeTipsTransitionName = "fade-slide-x";
       this.$nextTick(() => {
-        this.showSwingDegreeTab = true;
+        this.setData({
+          showSwingDegreeTab: true,
+        });
         this.seeUd();
         this.showSwingDegreeTips = false;
         this.showFixDegreeTips = false;
@@ -1575,7 +1597,9 @@ module.exports = Behavior({
     },
     transformHomeLrNotSwinging(showSwingDegreeTipsTimeout, cameraAnimNow) {
       this.seeSwingRange();
-      this.showSwingDegreeTab = true;
+      this.setData({
+        showSwingDegreeTab: true,
+      });
 
       cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos.clone();
       // .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))

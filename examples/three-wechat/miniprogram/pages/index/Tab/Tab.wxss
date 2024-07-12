@@ -1,0 +1,51 @@
+/* 微信小程序不支持 scoped 样式，需要使用 class 来指定样式 */
+.tab {
+  background-color: #cccccc;
+  border-radius: 18px;
+  width: 148px;
+  height: 36px;
+}
+.tab-headers {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 36px;
+  padding-left: 2px;
+}
+.tab-header {
+  width: 72px;
+  height: 32px;
+  background-color: transparent;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  color: #666666;
+  letter-spacing: 0;
+  text-align: center;
+  line-height: 32px;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+.tab-header-active {
+  background-color: #f2f2f2;
+  border-radius: 16px;
+  font-family: PingFangSC-Medium;
+  font-size: 14px;
+  color: #666666;
+  letter-spacing: 0;
+  text-align: center;
+  line-height: 32px;
+  font-weight: 500;
+}
+.tab-bg-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 36px;
+  padding-left: 2px;
+}
