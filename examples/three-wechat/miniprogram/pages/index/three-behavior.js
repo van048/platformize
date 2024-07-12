@@ -540,6 +540,32 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    updateLrDiyPercent() {
+      if (!this.isLrSwinging) return;
+      this.swingChangeSettingObj.lr_diy_up_percent =
+        this.statusData.lr_diy_up_percent;
+      this.swingChangeSettingObj.lr_diy_down_percent =
+        this.statusData.lr_diy_down_percent;
+
+      const up =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60);
+      this.updateShapeInHandleTouchMove2(up, down);
+      this.updateSphereInHandleTouchMove2(up, down);
+
+      // 更新tips
+      this.swingChangeSettingObj.display_left_angle = Math.max(
+        15,
+        Math.floor(
+          1.2 *
+            (this.swingChangeSettingObj.lr_diy_up_percent -
+              this.swingChangeSettingObj.lr_diy_down_percent)
+        )
+      );
+    },
     updateTargetAngle() {
       if (!this.isLrFocus) return;
 
@@ -2852,6 +2878,9 @@ module.exports = Behavior({
       }
       if (this.seeingSwingRange) {
         this.updateTargetAngle();
+      }
+      if (this.seeingSwingRange2) {
+        this.updateLrDiyPercent()
       }
     },
   },
