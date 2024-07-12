@@ -181,6 +181,64 @@ let draggingSphere;
 const touch = new THREE.Vector2();
 let draggingSwingShape;
 const raycaster = new THREE.Raycaster();
+// 送风范围
+let calVectorSwingRange = new THREE.Vector3(); // 避免重复new
+function threeConversionTwo(model, camera) {
+  // 这里判断model是因为model可能是被选中的mesh的position，也可能是点击到了环境贴图
+  if (model !== undefined) {
+    // 世界坐标转标准设备坐标
+    const worldVectorsss = new THREE.Vector3(model.x, model.y, model.z);
+    const ndc = worldVectorsss.project(camera);
+
+    // 将规范化设备坐标转换为屏幕坐标
+    const screenPosition = {
+      x: ((ndc.x + 1) / 2) * window.innerWidth,
+      y: ((1 - ndc.y) / 2) * window.innerHeight,
+    };
+
+    return screenPosition;
+  }
+  return;
+}
+function findPointOnCircleWithGivenX(circleCenter, pointP, x) {
+  const { x: a, y: b } = circleCenter; // 圆心坐标
+  const { x: x0, y: y0 } = pointP; // 已知圆上的点P的坐标
+
+  // 计算半径r
+  const r = Math.sqrt((x0 - a) ** 2 + (y0 - b) ** 2);
+
+  // 计算y值
+  const ySquared = r ** 2 - (x - a) ** 2;
+  if (ySquared < 0) {
+    // 如果ySquared小于0，说明x不在圆的范围内
+    return null;
+  }
+
+  const y1 = b + Math.sqrt(ySquared);
+  const y2 = b - Math.sqrt(ySquared);
+
+  // 检查y值是否大于圆心的y坐标
+  if (y1 > b) {
+    return { x, y: y1 };
+  } else if (y2 > b) {
+    return { x, y: y2 };
+  } else {
+    // 如果没有y值大于圆心的y坐标，返回null
+    return null;
+  }
+}
+function getAngleBAC(ax, ay, bx, by, cx, cy) {
+  let x1 = bx - ax;
+  let y1 = by - ay;
+  let x2 = cx - ax;
+  let y2 = cy - ay;
+  let dotProduct = x1 * x2 + y1 * y2;
+  let modAB = Math.sqrt(x1 * x1 + y1 * y1);
+  let modAC = Math.sqrt(x2 * x2 + y2 * y2);
+  let cosTheta = Math.max(-1, Math.min(1, dotProduct / (modAB * modAC)));
+  let angleBAC = (Math.acos(cosTheta) * 180) / Math.PI;
+  return angleBAC;
+}
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -449,6 +507,101 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    postDataToWeex(obj) {
+      console.error(obj);
+    },
+    updateSphereInHandleTouchMove2(up, down) {
+      // 更新拖动点
+      this.spheres[0].position.set(
+        this.swingRangeRadius * Math.cos(down),
+        this.swingRangeRadius * Math.sin(down),
+        this.sphereRadius / 2
+      );
+      this.spheres[1].position.set(
+        this.swingRangeRadius * Math.cos(up),
+        this.swingRangeRadius * Math.sin(up),
+        this.sphereRadius / 2
+      );
+    },
+    updateShapeInHandleTouchMove2(up, down, totalAngle = 120) {
+      // 更新扇形
+      this.rangePlane.geometry.dispose();
+      this.rangePlane.geometry = new THREE.CircleGeometry(
+        this.swingRangeRadius,
+        32,
+        down,
+        up - down
+      );
+
+      this.rangePlane_1.geometry.dispose();
+      this.rangePlane_1.geometry = new THREE.CircleGeometry(
+        this.swingRangeRadius,
+        32,
+        (Math.PI / 180) * (0 - totalAngle / 2),
+        down - (Math.PI / 180) * (0 - totalAngle / 2)
+      );
+
+      this.rangePlane_2.geometry.dispose();
+      this.rangePlane_2.geometry = new THREE.CircleGeometry(
+        this.swingRangeRadius,
+        32,
+        up,
+        ((Math.PI / 180) * totalAngle) / 2 - up
+      );
+    },
+    calculateAngleOffset(p, sphereRight2D, swingRangeOrigin2D) {
+      let angleOffset;
+      if (p == null) {
+        // 不在圆上，在右边
+        if (((touch.x + 1) / 2) * window.innerWidth >= sphereRight2D.x)
+          angleOffset = 0;
+        // 在左边
+        else angleOffset = 120;
+      } else {
+        if (p.x > sphereRight2D.x) {
+          // 点在圆上，但不在圆弧上
+          angleOffset = 0;
+        } else {
+          // 计算扇形最右端与找到的点间的角度
+          angleOffset = getAngleBAC(
+            swingRangeOrigin2D.x,
+            swingRangeOrigin2D.y,
+            sphereRight2D.x,
+            sphereRight2D.y,
+            p.x,
+            p.y
+          );
+        }
+      }
+      return angleOffset;
+    },
+    calculateSwingRangePoint() {
+      let v = new THREE.Vector3();
+      this.swingRangeShape.getWorldPosition(v);
+      // 扇形圆心在屏幕上的坐标
+      let swingRangeOrigin2D = threeConversionTwo(v.clone(), this.camera);
+      // 当前拖动的把柄在屏幕上的坐标
+      if (draggingSphere) draggingSphere.getWorldPosition(calVectorSwingRange);
+      else this.spheres[0].getWorldPosition(calVectorSwingRange);
+      let swingRangePoint2D = threeConversionTwo(
+        calVectorSwingRange.clone(),
+        this.camera
+      );
+      // 找到屏幕上横坐标跟触摸位置对应的，而且在扇形所在圆上的点
+      let p = findPointOnCircleWithGivenX(
+        swingRangeOrigin2D,
+        swingRangePoint2D,
+        ((touch.x + 1) / 2) * window.innerWidth
+      );
+      // 扇形最右端点在屏幕上的坐标
+      sphereRight.getWorldPosition(calVectorSwingRange);
+      let sphereRight2D = threeConversionTwo(
+        calVectorSwingRange.clone(),
+        this.camera
+      );
+
+      return { p, sphereRight2D, swingRangeOrigin2D };
+    },
     handleTouchMoveSwingShape(event) {
       if (!draggingSwingShape) return;
       // 满格了，没得移动
@@ -1549,9 +1702,9 @@ module.exports = Behavior({
     },
     tryTellThreeLoaded() {
       if (this.threeLoaded) {
-        // this.postDataToWeex({
-        //   type: 'threeLoaded',
-        // })
+        this.postDataToWeex({
+          type: "threeLoaded",
+        });
       }
     },
     updateLrGroup() {
@@ -1742,10 +1895,10 @@ module.exports = Behavior({
           if (fpsCount == 60) {
             // 计算平均FPS
             this.fps = Math.round(fpsTotal / 60);
-            // this.postDataToWeex({
-            //   type: 'fpsUpdate',
-            //   value: this.fps,
-            // })
+            this.postDataToWeex({
+              type: "fpsUpdate",
+              value: this.fps,
+            });
             // 如果平均FPS低于60，则输出警告信息
             if (this.fps < 50) console.warn("fps low " + this.fps);
             // 重置帧数计数器和FPS总数

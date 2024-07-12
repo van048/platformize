@@ -133,6 +133,10 @@ Component({
 
     onTX(e) {
       // console.error(e)
+      if(e.touches[0]) {
+        e.touches[0].clientX = e.touches[0].x
+        e.touches[0].clientY = e.touches[0].y
+      }
       this.platform.dispatchTouchEvent(e);
       if (e.type == 'touchstart') this.onTouchStart(e)
       else if (e.type == 'touchmove') this.onTouchMove(e)
