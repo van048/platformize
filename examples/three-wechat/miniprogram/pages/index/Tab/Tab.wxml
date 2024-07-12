@@ -1,7 +1,7 @@
-<view class="tab {{customClass}}" wx:if="{{!disable}}">
+<view class="tab {{customClass}}">
     <view class="tab-headers">
-        <view class="tab-bg-wrapper" style="{{tabHeaderBgStyle}}">
-            <view class="tab-header tab-header-active"></view>
+        <view class="tab-bg-wrapper">
+            <view class="tab-header tab-header-active" style="{{tabHeaderBgStyle}}"></view>
         </view>
         <view class="tab-header" wx:for="{{tabs}}" wx:key="id" bindtap="clickTab" data-index="{{index}}">
             {{item.title}}

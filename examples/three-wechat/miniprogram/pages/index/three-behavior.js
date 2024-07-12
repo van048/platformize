@@ -487,6 +487,7 @@ module.exports = Behavior({
       { id: "ud", title: "上下" },
     ],
     showSwingDegreeTab: false,
+    transforming: false,
   },
   attached: function () {},
   methods: {
@@ -512,6 +513,38 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    setCameraAnimUdAndAnimate() {
+      cameraAnimUd.endPos = cameraAnimForwardHome.endPos
+        .clone()
+        .sub(new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1))
+        .add(new THREE.Vector3(2.53438, 0.680595, -0.137939 * -1))
+        // 微调
+        .add(new THREE.Vector3(0.5, 0, 0));
+      cameraAnimUd.endTarget = cameraAnimForwardHome.endTarget
+        .clone()
+        // 微调
+        .add(new THREE.Vector3(0, 0, 0.1));
+      let cameraAnimNow = {
+        pos: cameraAnimForwardHome.endPos.clone(),
+        target: cameraAnimForwardHome.endTarget.clone(),
+        light: cameraAnimForwardHome.endLight.clone(),
+      };
+      animateCamera(
+        cameraAnimNow.pos.clone(),
+        cameraAnimNow.target.clone(),
+        cameraAnimNow.light.clone(),
+        cameraAnimUd.endPos.clone(),
+        cameraAnimUd.endTarget.clone(),
+        cameraAnimUd.endLight.clone(),
+        normalAnimDuration,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer,
+        this.cameraAnimUdScaleFunc
+        // singleBounce
+      );
+    },
     tabClicked(event) {
       let tabId = event.detail.tabId;
       this.setData({
@@ -901,7 +934,9 @@ module.exports = Behavior({
       if (lastTransformType != "homeBack" && lastTransformType != null) return;
       if (this.statusData.power != "on") return;
       this.currentTransformType = type;
-      this.transforming = true;
+      this.setData({
+        transforming: true,
+      });
       animateCamera(
         cameraAnimForwardHome.startPos.clone(),
         cameraAnimForwardHome.startTarget.clone(),
@@ -969,7 +1004,9 @@ module.exports = Behavior({
           this.reset();
           this.seeSwingRange2();
           setOpacity(this.swingRangeShape, 1);
-          this.transforming = true;
+          this.setData({
+            transforming: true,
+          });
           this.showFixDegreeTips = false;
           this.showSwingDegreeTips = true;
           // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
@@ -1100,7 +1137,9 @@ module.exports = Behavior({
         this.reset();
         this.reset2();
         this.currentTransformType = type;
-        this.transforming = true;
+        this.setData({
+          transforming: true,
+        });
         this.swingDegreeTipsTransitionName = "fade-slide-x";
         this.swingFixDegreeTipsTransitionName = "fade-slide-x";
         this.$nextTick(() => {
@@ -1108,8 +1147,10 @@ module.exports = Behavior({
           this.showUdDegreeTips = true;
           this.showSwingDegreeTips = false;
           this.showFixDegreeTips = false;
-          this.switchObj.show = false;
-          this.upPanel.show = true;
+          this.setData({
+            "switchObj.show": false,
+            "upPanel.show": true,
+          });
 
           startPos = swingRangeShapeInitPosUd.clone();
           startPos.y += swingRangeShapeInitPosUdOffset;
@@ -1182,7 +1223,9 @@ module.exports = Behavior({
         this.swingFixDegreeTipsTransitionName = "fade-slide-y";
       }
       this.currentTransformType = type;
-      this.transforming = true;
+      this.setData({
+        transforming: true,
+      });
       if (lastTransformType == null || lastTransformType == "homeBackOff") {
         // 关机到开机
         this.setCameraAnimHomeBackAndAnimate(lastTransformType);
@@ -1263,7 +1306,9 @@ module.exports = Behavior({
       if (this.statusData.power == "off") return;
       this.startChangeColor();
       this.currentTransformType = type;
-      this.transforming = true;
+      this.setData({
+        transforming: true,
+      });
       // TODO
       // this.modelMaskStyleObj.height = pxToRem(0)
       this.setData({
@@ -1692,7 +1737,9 @@ module.exports = Behavior({
           showSwingDegreeTipsTimeout = 0;
           this.reset();
           this.reset2();
-          this.upPanel.show = false;
+          this.setData({
+            "upPanel.show": false,
+          });
         }
         if (lastTransformType == "homeBack") {
           this.udDegreeTipsTransitionName = "fade-slide-y";
@@ -1700,7 +1747,9 @@ module.exports = Behavior({
           this.swingFixDegreeTipsTransitionName = "fade-slide-y";
         }
         this.currentTransformType = type;
-        this.transforming = true;
+        this.setData({
+          transforming: true,
+        });
         if (this.activeTab === "lr") {
           this.transformHomeLr(lastTransformType, showSwingDegreeTipsTimeout);
         } else {
@@ -1750,7 +1799,9 @@ module.exports = Behavior({
           break;
       }
       setTimeout(() => {
-        this.transforming = false;
+        this.setData({
+          transforming: false,
+        });
       }, normalAnimDuration + 500);
     },
     resetLrDegAnim() {
@@ -2400,6 +2451,9 @@ module.exports = Behavior({
     },
     activeTab: function (activeTab) {
       this.activeTab = activeTab;
+    },
+    transforming: function (transforming) {
+      this.transforming = transforming;
     },
     isLrSwinging: function (isLrSwinging) {
       this.isLrSwinging = isLrSwinging;

@@ -24,6 +24,9 @@ Component({
     activeTabId: function (newVal) {
       this.setData({ activeTab: newVal });
     },
+    activeTab: function (newVal) {
+      this.updateTabHeaderStyle();
+    },
   },
   methods: {
     clickTab(e) {
