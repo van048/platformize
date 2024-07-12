@@ -350,3 +350,27 @@
 .up-option:not(:first-child) {
   margin-left: 10px;
 }
+
+.ud-click-mock {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+}
+.ud-click-mock-1 {
+  position: absolute;
+  left: 30px;
+  top: 116.25px;
+  right: 250px;
+  bottom: 337.5px;
+  /* background: #f00; */
+}
+.ud-click-mock-2 {
+  position: absolute;
+  left: 131.25px;
+  top: 146.25px;
+  right: 112.5px;
+  bottom: 375px;
+  /* background: #f00; */
+}

@@ -1,6 +1,10 @@
 <!-- index.wxml -->
 <view class="page" style="--anim-duration: 0.5s;">
   <canvas class="canvas {{showCanvas ? '' : 'hide'}}" id="gl" type="webgl" bindtouchstart="onTX" bindtouchmove="onTX" bindtouchend="onTX"></canvas>
+  <view class="ud-click-mock" wx:if="{{showUdDegreeTips}}">
+    <view class="ud-click-mock-1" bindtap="loopUd"></view>
+    <view class="ud-click-mock-2" bindtap="loopUd"></view>
+  </view>
   <view class="btn-group">
     <button class="btn" bindtap="test">ud</button>
     <button class="btn" bindtap="test2">home</button>

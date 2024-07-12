@@ -617,7 +617,7 @@ module.exports = Behavior({
         0,
         Math.min(100, (angleOffset * 100) / 120)
       );
-      this.updateComputed()
+      this.updateComputed();
 
       const offset = targetAngleOffset;
       const up =
@@ -736,7 +736,13 @@ module.exports = Behavior({
       let options = this.upPanel.options;
       let curIndex = options.findIndex((it) => it == this.activeUdOption);
       let nextIndex = (curIndex + 1) % options.length;
-      this.udOptionClick(options[nextIndex]);
+      this.udOptionClick({
+        currentTarget: {
+          dataset: {
+            option: options[nextIndex],
+          },
+        },
+      });
     },
     updateSwitchObj() {
       if (this.isLrSwinging) {
