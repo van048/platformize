@@ -443,6 +443,105 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    transformHomeBackOff(lastTransformType, type) {
+      // 先只考虑特定情况
+      if (lastTransformType != 'homeBack' && lastTransformType != null) return
+      if (this.statusData.power != 'on') return
+      this.currentTransformType = type
+      this.transforming = true
+      animateCamera(
+        cameraAnimForwardHome.startPos.clone(),
+        cameraAnimForwardHome.startTarget.clone(),
+        cameraAnimForwardHome.startLight.clone(),
+        cameraInitPosOff.clone(),
+        cameraInitTargetOff.clone(),
+        cameraAnimForwardHome.startLight.clone(),
+        normalAnimDuration,
+        this.camera,
+        this.scene,
+        light,
+        this.renderer
+      )
+    },
+    transformSwingOff(lastTransformType, type) {
+      // ud=>swingOff，通过activeTab=lr和ud=>home来实现
+      // home=>swingOff
+      // swingOn=>swingOff
+      // homeBack=>swingOff，通过activeTab=lr和homeBack=>home来实现
+      if (lastTransformType == 'home' || lastTransformType == 'swingOn') {
+        this.currentTransformType = type
+        this.reset2()
+        this.seeSwingRange()
+        setOpacity(this.swingRangeShape, 1)
+        this.showSwingDegreeTips = false
+        this.showFixDegreeTips = true
+        // this.transforming = true
+        // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
+        //   .clone()
+        //   .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))
+        //   .sub(new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1))
+        // cameraAnimSwingOff.target = cameraAnimForwardHome.endTarget.clone()
+        // cameraAnimSwingOff.light = cameraAnimForwardHome.startLight.clone()
+        // cameraAnimSwingOff.pos.z += 0.5
+        // cameraAnimSwingOff.pos.x -= 1
+        // animateCamera(
+        //   cameraAnimForwardHome.endPos.clone(),
+        //   cameraAnimForwardHome.endTarget.clone(),
+        //   cameraAnimForwardHome.endLight.clone(),
+        //   cameraAnimSwingOff.pos.clone(),
+        //   cameraAnimSwingOff.target.clone(),
+        //   cameraAnimSwingOff.light.clone(),
+        //   normalAnimDuration,
+        //   this.camera,
+        //   this.scene,
+        //   light,
+        //   this.renderer
+        // )
+      }
+    },
+    transformSwingOn(lastTransformType, type) {
+      // ud=>swingOn，通过ud=>home实现
+      // home=>swingOn，通过swingOff=>swingOn、ud=>swingOn实现
+      // homeBack=>swingOn，通过homeBack=>home实现
+      // swingOff=>swingOn
+      if (
+        lastTransformType == 'swingOff' ||
+        (lastTransformType == 'home' && !this.seeingSwingRange2)
+      ) {
+        if (lastTransformType == 'home' && !this.seeingSwingRange2) {
+          this.swingFixDegreeTipsTransitionName = 'fade-slide-y-fix'
+        }
+        this.$nextTick(() => {
+          this.currentTransformType = type
+          this.reset()
+          this.seeSwingRange2()
+          setOpacity(this.swingRangeShape, 1)
+          this.transforming = true
+          this.showFixDegreeTips = false
+          this.showSwingDegreeTips = true
+          // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
+          //   .clone()
+          //   .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))
+          //   .sub(new THREE.Vector3(0.077583, 0.694439, -2.74864 * -1))
+          // cameraAnimSwingOff.target = cameraAnimForwardHome.endTarget.clone()
+          // cameraAnimSwingOff.target.x -= 0.1
+          // cameraAnimSwingOff.light = cameraAnimForwardHome.startLight.clone()
+          // animateCamera(
+          //   cameraAnimSwingOff.pos.clone(),
+          //   cameraAnimSwingOff.target.clone(),
+          //   cameraAnimSwingOff.light.clone(),
+          //   cameraAnimForwardHome.endPos.clone(),
+          //   cameraAnimForwardHome.endTarget.clone(),
+          //   cameraAnimForwardHome.endLight.clone(),
+          //   normalAnimDuration,
+          //   this.camera,
+          //   this.scene,
+          //   light,
+          //   this.renderer
+          // )
+        })
+      }
+    },
     addSwingRangeObjects2() {
       const swingRangeRadius = 0.3;
       this.swingRangeRadius = swingRangeRadius;
@@ -704,6 +803,7 @@ module.exports = Behavior({
       this.changingColor = true;
     },
     transformLook(type) {
+      if (this.statusData.power == "off") return;
       this.startChangeColor();
       this.currentTransformType = type;
       this.transforming = true;
@@ -1117,9 +1217,10 @@ module.exports = Behavior({
       // swingOn=>home，其实是处理swingOn=>swingOff/ud
       // swingOff=>home，其实是处理swingOff=>swingOn/ud
       if (
-        lastTransformType == "homeBack" ||
+        this.statusData.power == "on" &&
+        (lastTransformType == "homeBack" ||
         lastTransformType == null ||
-        lastTransformType == "ud"
+          lastTransformType == "ud")
       ) {
         let showSwingDegreeTipsTimeout = 600;
         if (lastTransformType === "ud") {
