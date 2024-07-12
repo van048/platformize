@@ -422,6 +422,9 @@ function animateObject(
   requestAnimationFrame(animate);
 }
 
+function isPC() {
+  return true;
+}
 // 调试开关
 const debugObj = {
   gui: false,
@@ -431,8 +434,7 @@ const debugObj = {
   cone: false,
   axesHelper: false,
   light: false,
-  // mockStatus: isPC(),
-  mockStatus: true,
+  mockStatus: isPC(),
   mockStatusObj: {
     power: "on",
     gear: 1,
@@ -529,25 +531,24 @@ module.exports = Behavior({
     updateSwitchObj() {
       if (this.isLrSwinging) {
         this.setData({
-          switchObj: {
-            statusText: "已开启",
-            value: "on",
-            icon: "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-on.png",
-          },
+          "switchObj.statusText": "已开启",
+          "switchObj.value": "on",
+          "switchObj.icon":
+            "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-on.png",
         });
       } else if (this.isLrFocus) {
         this.setData({
-          switchObj: {
-            statusText: "已关闭",
-            value: "off",
-            icon: "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-off.png",
-          },
+          "switchObj.statusText": "已关闭",
+          "switchObj.value": "off",
+          "switchObj.icon":
+            "https://ce-cdn.midea.com/activity/sit/3D/image/icon/icon-switch-off.png",
         });
       }
     },
     toggleSwingSwitch() {
       // 动画中
       if (this.transforming) return;
+      if (!this.switchObj.show) return;
       if (isPC()) {
         if (this.switchObj.value == "on") {
           debugObj.mockStatusObj.swing = "off";
@@ -2543,6 +2544,14 @@ module.exports = Behavior({
     isLrSwinging: function (isLrSwinging) {
       this.isLrSwinging = isLrSwinging;
       this.updateSwitchObj();
+      if (this.activeTab == 'lr') {
+        if (!isLrSwinging) {
+          // 从到开关
+          this.transform('swingOff')
+        } else {
+          this.transform('swingOn')
+        }
+      }
     },
     isLrFocus: function (isLrFocus) {
       this.isLrFocus = isLrFocus;
