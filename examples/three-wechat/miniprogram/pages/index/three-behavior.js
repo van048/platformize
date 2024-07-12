@@ -445,10 +445,10 @@ module.exports = Behavior({
 
     transformHomeBackOff(lastTransformType, type) {
       // 先只考虑特定情况
-      if (lastTransformType != 'homeBack' && lastTransformType != null) return
-      if (this.statusData.power != 'on') return
-      this.currentTransformType = type
-      this.transforming = true
+      if (lastTransformType != "homeBack" && lastTransformType != null) return;
+      if (this.statusData.power != "on") return;
+      this.currentTransformType = type;
+      this.transforming = true;
       animateCamera(
         cameraAnimForwardHome.startPos.clone(),
         cameraAnimForwardHome.startTarget.clone(),
@@ -461,20 +461,20 @@ module.exports = Behavior({
         this.scene,
         light,
         this.renderer
-      )
+      );
     },
     transformSwingOff(lastTransformType, type) {
       // ud=>swingOff，通过activeTab=lr和ud=>home来实现
       // home=>swingOff
       // swingOn=>swingOff
       // homeBack=>swingOff，通过activeTab=lr和homeBack=>home来实现
-      if (lastTransformType == 'home' || lastTransformType == 'swingOn') {
-        this.currentTransformType = type
-        this.reset2()
-        this.seeSwingRange()
-        setOpacity(this.swingRangeShape, 1)
-        this.showSwingDegreeTips = false
-        this.showFixDegreeTips = true
+      if (lastTransformType == "home" || lastTransformType == "swingOn") {
+        this.currentTransformType = type;
+        this.reset2();
+        this.seeSwingRange();
+        setOpacity(this.swingRangeShape, 1);
+        this.showSwingDegreeTips = false;
+        this.showFixDegreeTips = true;
         // this.transforming = true
         // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
         //   .clone()
@@ -505,20 +505,20 @@ module.exports = Behavior({
       // homeBack=>swingOn，通过homeBack=>home实现
       // swingOff=>swingOn
       if (
-        lastTransformType == 'swingOff' ||
-        (lastTransformType == 'home' && !this.seeingSwingRange2)
+        lastTransformType == "swingOff" ||
+        (lastTransformType == "home" && !this.seeingSwingRange2)
       ) {
-        if (lastTransformType == 'home' && !this.seeingSwingRange2) {
-          this.swingFixDegreeTipsTransitionName = 'fade-slide-y-fix'
+        if (lastTransformType == "home" && !this.seeingSwingRange2) {
+          this.swingFixDegreeTipsTransitionName = "fade-slide-y-fix";
         }
         this.$nextTick(() => {
-          this.currentTransformType = type
-          this.reset()
-          this.seeSwingRange2()
-          setOpacity(this.swingRangeShape, 1)
-          this.transforming = true
-          this.showFixDegreeTips = false
-          this.showSwingDegreeTips = true
+          this.currentTransformType = type;
+          this.reset();
+          this.seeSwingRange2();
+          setOpacity(this.swingRangeShape, 1);
+          this.transforming = true;
+          this.showFixDegreeTips = false;
+          this.showSwingDegreeTips = true;
           // cameraAnimSwingOff.pos = cameraAnimForwardHome.endPos
           //   .clone()
           //   .add(new THREE.Vector3(1.50636, 0.921639, -2.25001 * -1))
@@ -539,7 +539,7 @@ module.exports = Behavior({
           //   light,
           //   this.renderer
           // )
-        })
+        });
       }
     },
     addSwingRangeObjects2() {
@@ -719,7 +719,6 @@ module.exports = Behavior({
     },
     transformHomeBack(lastTransformType, type) {
       let startPos;
-      if (!lastTransformType) return;
       // home=>homeBack
       // ud=>homeBack
       // swingOn=>homeBack
@@ -1219,7 +1218,7 @@ module.exports = Behavior({
       if (
         this.statusData.power == "on" &&
         (lastTransformType == "homeBack" ||
-        lastTransformType == null ||
+          lastTransformType == null ||
           lastTransformType == "ud")
       ) {
         let showSwingDegreeTipsTimeout = 600;
@@ -1863,6 +1862,7 @@ module.exports = Behavior({
       this.clock = new THREE.Clock();
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
+      this.currentTransformType = null;
 
       this.setData({
         activeTab: "lr",
