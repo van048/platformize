@@ -23,6 +23,13 @@
     <text class="swing-degree">{{ tips2 }}</text>
     <text class="swing-degree-label">左右摇头范围</text>
   </view>
+  <view class="tips2 {{showFixDegreeTips?swingFixDegreeTipsTransitionName+'-origin':swingFixDegreeTipsTransitionName+'-enter'}}">
+    <view class="swing-degree-mix">
+      <text class="swing-degree-ch">{{ tipsFirstChar }}</text>
+      <text class="swing-degree">{{ tipsRestOfTips }}</text>
+    </view>
+    <text class="swing-degree-label">左右定点角度</text>
+  </view>
   <view class="switch-wrapper {{switchObj.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" bindtap="toggleSwingSwitch">
     <view wx:if="{{loadingType == 'toggleSwingSwitch' && controlLoading}}" class="loading-bg flex-ccc" style="background: {{loadingBgColor }}">
       <image class="loading" src="{{loadingIcon}}" />
