@@ -513,6 +513,8 @@ module.exports = Behavior({
     showUdDegreeTips: false,
     udDegreeTipsTransitionName: "fade-slide-ud",
     tips4: "",
+
+    activeUdOption: null,
   },
   attached: function () {},
   methods: {
@@ -538,6 +540,47 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    animateUdShape(from, to) {
+      const start = performance.now()
+      const duration = normalAnimDuration / 4
+
+      const animate = () => {
+        const now = performance.now()
+        const elapsedTime = now - start
+        const progress = elapsedTime / duration
+
+        let totalAngle = 135
+        if (progress < 1) {
+          // 使用提供的easing函数来计算插值
+          const easedProgress = progress
+
+          // 插值
+          let displayAngle = Math.max(from + (to - from) * easedProgress, 5)
+          const up = ((Math.PI / 180) * displayAngle) / 2
+          const down = -((Math.PI / 180) * displayAngle) / 2
+
+          this.updateShapeInHandleTouchMove2(up, down, totalAngle)
+          // 继续动画
+          requestAnimationFrame(animate)
+        } else {
+          // 动画结束
+          let displayAngle = Math.max(to, 5)
+          const up = ((Math.PI / 180) * displayAngle) / 2
+          const down = -((Math.PI / 180) * displayAngle) / 2
+
+          this.updateShapeInHandleTouchMove2(up, down, totalAngle)
+        }
+      }
+
+      // 开始动画
+      requestAnimationFrame(animate)
+    },
+    loopUd() {
+      let options = this.upPanel.options;
+      let curIndex = options.findIndex((it) => it == this.activeUdOption);
+      let nextIndex = (curIndex + 1) % options.length;
+      this.udOptionClick(options[nextIndex]);
+    },
     updateSwitchObj() {
       if (this.isLrSwinging) {
         this.setData({
@@ -613,10 +656,15 @@ module.exports = Behavior({
           text = this.swingChangeSettingObj.ud_swing_angle + "°";
         return text;
       };
+
+      let activeUdOption = () => {
+        return this.swingChangeSettingObj.ud_swing_angle;
+      };
       this.setData({
         tips2: tips2(),
         tips: tips(),
         tips4: tips4(),
+        activeUdOption: activeUdOption(),
       });
     },
     setCameraAnimUdAndAnimate() {
@@ -2571,6 +2619,14 @@ module.exports = Behavior({
     },
   },
   observers: {
+    activeUdOption(newVal) {
+      let oldVal = this.activeUdOption
+      this.activeUdOption = newVal;
+      if (this.activeTab == "ud") {
+        // 动画
+        this.animateUdShape(oldVal, newVal);
+      }
+    },
     tips: function (tips) {
       this.setData({
         tipsFirstChar: tips.substring(0, 1),

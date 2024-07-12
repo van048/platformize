@@ -322,3 +322,31 @@
   transform: translateX(0);
   transition: opacity var(--anim-duration), transform var(--anim-duration);
 }
+
+
+.up-switch-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100px;
+}
+.up-option {
+  width: 70px;
+  height: 36px;
+  background-color: #f2f2f2;
+  border-radius: 18px;
+
+  font-family: PingFangSC-Medium;
+  font-size: 14px;
+  color: #666666;
+  text-align: center;
+  line-height: 36px;
+  font-weight: 500;
+}
+.up-option-active {
+  background-color: #00cbb8;
+  color: #ffffff;
+}
+.up-option:not(:first-child) {
+  margin-left: 10px;
+}
