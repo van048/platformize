@@ -30,6 +30,10 @@
     </view>
     <text class="swing-degree-label">左右定点角度</text>
   </view>
+  <view class="tips2 {{showUdDegreeTips?udDegreeTipsTransitionName+'-origin':udDegreeTipsTransitionName+'-enter'}}">
+    <text class="swing-degree">{{ tips4 }}</text>
+    <text class="swing-degree-label">上下摇头范围</text>
+  </view>
   <view class="switch-wrapper {{switchObj.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" bindtap="toggleSwingSwitch">
     <view wx:if="{{loadingType == 'toggleSwingSwitch' && controlLoading}}" class="loading-bg flex-ccc" style="background: {{loadingBgColor }}">
       <image class="loading" src="{{loadingIcon}}" />

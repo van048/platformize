@@ -312,3 +312,13 @@
   transform: translateY(0);
   transition: opacity var(--anim-duration), transform var(--anim-duration);
 }
+.fade-slide-ud-enter {
+  opacity: 0;
+  transform: translateX(100px);
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
+}
+.fade-slide-ud-origin {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity var(--anim-duration), transform var(--anim-duration);
+}
