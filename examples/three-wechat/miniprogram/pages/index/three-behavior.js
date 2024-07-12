@@ -507,6 +507,56 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    tuneByUpDownDiff(angleOffset) {
+      // down，右边的
+      this.swingChangeSettingObj.lr_diy_down_percent = Math.max(
+        0,
+        draggingSwingShape.current.down + angleOffset
+      )
+      // up，左边的
+      this.swingChangeSettingObj.lr_diy_up_percent = Math.min(
+        100,
+        draggingSwingShape.current.up + angleOffset
+      )
+      // console.error(
+      //   (angleOffset * 120) / 100,
+      //   this.swingChangeSettingObj.lr_diy_down_percent,
+      //   this.swingChangeSettingObj.lr_diy_up_percent,
+      //   pTouchStart.x,
+      //   pTouchStart.y,
+      //   p.x,
+      //   p.y
+      // )
+      let originDiff =
+        draggingSwingShape.current.up - draggingSwingShape.current.down
+      if (
+        this.swingChangeSettingObj.lr_diy_up_percent -
+          this.swingChangeSettingObj.lr_diy_down_percent <
+        originDiff
+      ) {
+        if (this.swingChangeSettingObj.lr_diy_up_percent == 100) {
+          this.swingChangeSettingObj.lr_diy_down_percent =
+            this.swingChangeSettingObj.lr_diy_up_percent - originDiff
+        }
+        if (this.swingChangeSettingObj.lr_diy_down_percent == 0) {
+          this.swingChangeSettingObj.lr_diy_up_percent =
+            this.swingChangeSettingObj.lr_diy_down_percent + originDiff
+        }
+      }
+    },
+    getPTouchStart(swingRangeOrigin2D) {
+      // 当前拖动的把柄在屏幕上的坐标
+      this.spheres[0].getWorldPosition(calVectorSwingRange)
+      let swingRangePoint2D = threeConversionTwo(
+        calVectorSwingRange.clone(),
+        this.camera
+      )
+      return findPointOnCircleWithGivenX(
+        swingRangeOrigin2D,
+        swingRangePoint2D,
+        ((draggingSwingShape.touch.x + 1) / 2) * window.innerWidth
+      )
+    },
     postDataToWeex(obj) {
       console.error(obj);
     },
