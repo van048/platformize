@@ -1930,8 +1930,7 @@ module.exports = Behavior({
      * 使用模型里的相机作为场景的相机
      */
     initCameraInModel(child) {
-      // const aspectRatio = window.innerWidth / window.innerHeight;
-      const aspectRatio = 750 / 1280;
+      const aspectRatio = window.innerWidth / window.innerHeight;
       console.log("initCameraInModel", child);
       // 删除现有camera
       if (this.camera) this.camera.removeFromParent();
