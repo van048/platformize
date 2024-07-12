@@ -46,7 +46,7 @@
     </view>
   </view>
   <view class="up-switch-wrapper flex-rcc {{upPanel.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}">
-    <view wx:for="{{upPanel.options}}" wx:key="*this" class="up-option {{item === activeUdOption?'up-option-active':'' }}" bindtap="udOptionClick">
+    <view wx:for="{{upPanel.options}}" wx:key="*this" class="up-option {{item === activeUdOption?'up-option-active':'' }}" bindtap="udOptionClick" data-option="{{item}}">
       {{ item + '°' }}
     </view>
   </view>

@@ -540,40 +540,65 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    udOptionClick(event) {
+      if (!this.upPanel.show) return;
+      let value = event.currentTarget.dataset.option;
+      if (isPC()) {
+        if (value == 0) {
+          debugObj.mockStatusObj.swing_direction = "lr";
+          // 两种情况
+          // debugObj.mockStatusObj.swing_direction = 'invalid'
+          debugObj.mockStatusObj.ud_swing_angle = 0;
+        } else {
+          debugObj.mockStatusObj.swing_direction = "ud";
+          // 两种情况
+          // debugObj.mockStatusObj.swing_direction = 'udlr'
+          debugObj.mockStatusObj.ud_swing_angle = value;
+        }
+        this.updateStatus(debugObj.mockStatusObj);
+      } else {
+        this.postDataToWeex({
+          type: "udControl",
+          value: JSON.stringify({
+            targetValue: value,
+          }),
+        });
+      }
+    },
     animateUdShape(from, to) {
-      const start = performance.now()
-      const duration = normalAnimDuration / 4
+      const start = performance.now();
+      const duration = normalAnimDuration / 4;
 
       const animate = () => {
-        const now = performance.now()
-        const elapsedTime = now - start
-        const progress = elapsedTime / duration
+        const now = performance.now();
+        const elapsedTime = now - start;
+        const progress = elapsedTime / duration;
 
-        let totalAngle = 135
+        let totalAngle = 135;
         if (progress < 1) {
           // 使用提供的easing函数来计算插值
-          const easedProgress = progress
+          const easedProgress = progress;
 
           // 插值
-          let displayAngle = Math.max(from + (to - from) * easedProgress, 5)
-          const up = ((Math.PI / 180) * displayAngle) / 2
-          const down = -((Math.PI / 180) * displayAngle) / 2
+          let displayAngle = Math.max(from + (to - from) * easedProgress, 5);
+          const up = ((Math.PI / 180) * displayAngle) / 2;
+          const down = -((Math.PI / 180) * displayAngle) / 2;
 
-          this.updateShapeInHandleTouchMove2(up, down, totalAngle)
+          this.updateShapeInHandleTouchMove2(up, down, totalAngle);
           // 继续动画
-          requestAnimationFrame(animate)
+          requestAnimationFrame(animate);
         } else {
           // 动画结束
-          let displayAngle = Math.max(to, 5)
-          const up = ((Math.PI / 180) * displayAngle) / 2
-          const down = -((Math.PI / 180) * displayAngle) / 2
+          let displayAngle = Math.max(to, 5);
+          const up = ((Math.PI / 180) * displayAngle) / 2;
+          const down = -((Math.PI / 180) * displayAngle) / 2;
 
-          this.updateShapeInHandleTouchMove2(up, down, totalAngle)
+          this.updateShapeInHandleTouchMove2(up, down, totalAngle);
         }
-      }
+      };
 
       // 开始动画
-      requestAnimationFrame(animate)
+      requestAnimationFrame(animate);
     },
     loopUd() {
       let options = this.upPanel.options;
@@ -2620,7 +2645,7 @@ module.exports = Behavior({
   },
   observers: {
     activeUdOption(newVal) {
-      let oldVal = this.activeUdOption
+      let oldVal = this.activeUdOption;
       this.activeUdOption = newVal;
       if (this.activeTab == "ud") {
         // 动画
@@ -2635,6 +2660,9 @@ module.exports = Behavior({
     },
     "lookPanel.**": function (lookPanel) {
       this.lookPanel = lookPanel;
+    },
+    "upPanel.**": function (upPanel) {
+      this.upPanel = upPanel;
     },
     "switchObj.**": function (switchObj) {
       this.switchObj = switchObj;
@@ -2673,6 +2701,10 @@ module.exports = Behavior({
         isLrSwinging,
         isLrFocus: statusData.power == "on" && !isLrSwinging,
       });
+      if (this.swingChangeSettingObj) {
+        this.swingChangeSettingObj.ud_swing_angle = statusData.ud_swing_angle;
+        this.updateComputed();
+      }
     },
   },
 });
