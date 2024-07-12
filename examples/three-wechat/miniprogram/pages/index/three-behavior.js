@@ -180,6 +180,7 @@ let draggingHead;
 let draggingSphere;
 const touch = new THREE.Vector2();
 let draggingSwingShape;
+const raycaster = new THREE.Raycaster();
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -448,38 +449,149 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    handleTouchMoveSwingShape(event) {
+      if (!draggingSwingShape) return;
+      // 满格了，没得移动
+      if (
+        this.swingChangeSettingObj.lr_diy_up_percent == 100 &&
+        this.swingChangeSettingObj.lr_diy_down_percent == 0
+      ) {
+        draggingSwingShape = null;
+        return;
+      }
+      // console.error(JSON.stringify(draggingSwingShape))
+
+      // let originX = touch.x
+      // let originY = touch.y
+      // 计算触摸位置
+      touch.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+      touch.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+      let { p, swingRangeOrigin2D } = this.calculateSwingRangePoint();
+      if (p == null) return;
+
+      // 找到屏幕上横坐标跟touchStart触摸位置对应的，而且在扇形所在圆上的点
+      let pTouchStart = this.getPTouchStart(swingRangeOrigin2D);
+
+      let angleOffset = getAngleBAC(
+        swingRangeOrigin2D.x,
+        swingRangeOrigin2D.y,
+        pTouchStart.x,
+        pTouchStart.y,
+        p.x,
+        p.y
+      );
+      angleOffset = (angleOffset * 100) / 120;
+      if (pTouchStart.x < p.x) angleOffset *= -1;
+
+      this.tuneByUpDownDiff(angleOffset);
+
+      const up =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60);
+      this.updateShapeInHandleTouchMove2(up, down);
+      this.updateSphereInHandleTouchMove2(up, down);
+
+      // 更新tips
+      this.swingChangeSettingObj.display_left_angle = Math.max(
+        15,
+        Math.floor(
+          1.2 *
+            (this.swingChangeSettingObj.lr_diy_up_percent -
+              this.swingChangeSettingObj.lr_diy_down_percent)
+        )
+      );
+    },
+    handleTouchMove2(event) {
+      if (!draggingSphere) return;
+
+      // let originX = touch.x
+      // let originY = touch.y
+      // 计算触摸位置
+      touch.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+      touch.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+      let { p, sphereRight2D, swingRangeOrigin2D } =
+        this.calculateSwingRangePoint();
+
+      let angleOffset = this.calculateAngleOffset(
+        p,
+        sphereRight2D,
+        swingRangeOrigin2D
+      );
+
+      if (draggingSphere == this.spheres[0]) {
+        // down，右边的
+        this.swingChangeSettingObj.lr_diy_down_percent = Math.max(
+          0,
+          Math.min(
+            this.swingChangeSettingObj.lr_diy_up_percent - 1500 / 120,
+            (angleOffset * 100) / 120
+          )
+        );
+      } else if (draggingSphere == this.spheres[1]) {
+        // up，左边的
+        this.swingChangeSettingObj.lr_diy_up_percent = Math.max(
+          this.swingChangeSettingObj.lr_diy_down_percent + 1500 / 120,
+          Math.min(100, (angleOffset * 100) / 120)
+        );
+      }
+
+      const up =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_up_percent - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * this.swingChangeSettingObj.lr_diy_down_percent - 60);
+      this.updateShapeInHandleTouchMove2(up, down);
+      this.updateSphereInHandleTouchMove2(up, down);
+
+      // 更新tips
+      this.swingChangeSettingObj.display_left_angle = Math.max(
+        15,
+        Math.floor(
+          1.2 *
+            (this.swingChangeSettingObj.lr_diy_up_percent -
+              this.swingChangeSettingObj.lr_diy_down_percent)
+        )
+      );
+    },
     onTouchEnd() {
       if (this.seeingSwingRange) {
         // 确定
         if (draggingHead) {
-          this.statusData.target_angle = this.swingChangeSettingObj.target_angle
+          this.statusData.target_angle =
+            this.swingChangeSettingObj.target_angle;
           // console.log(this.swingChangeSettingObj)
           this.postDataToWeex({
-            type: 'lrFocusChanged',
+            type: "lrFocusChanged",
             value: JSON.stringify(this.swingChangeSettingObj),
-          })
+          });
         }
       }
       if (this.seeingSwingRange2) {
         if (draggingSphere || draggingSwingShape) {
           this.swingChangeSettingObj.lr_diy_down_percent = Math.round(
             this.swingChangeSettingObj.lr_diy_down_percent
-          )
+          );
           this.swingChangeSettingObj.lr_diy_up_percent = Math.round(
             this.swingChangeSettingObj.lr_diy_up_percent
-          )
+          );
 
           this.statusData.lr_diy_down_percent =
-            this.swingChangeSettingObj.lr_diy_down_percent
+            this.swingChangeSettingObj.lr_diy_down_percent;
           this.statusData.lr_diy_up_percent =
-            this.swingChangeSettingObj.lr_diy_up_percent
+            this.swingChangeSettingObj.lr_diy_up_percent;
           this.statusData.display_left_angle =
-            this.swingChangeSettingObj.display_left_angle
+            this.swingChangeSettingObj.display_left_angle;
           // console.log(this.swingChangeSettingObj)
           this.postDataToWeex({
-            type: 'lrSwingRangeChanged',
+            type: "lrSwingRangeChanged",
             value: JSON.stringify(this.swingChangeSettingObj),
-          })
+          });
         }
       }
     },
