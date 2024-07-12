@@ -540,6 +540,138 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    updateTargetAngle() {
+      if (!this.isLrFocus) return;
+
+      this.swingChangeSettingObj.target_angle = this.statusData.target_angle;
+
+      const offset = targetAngleOffset;
+      const up =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle + offset) - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle - offset) - 60);
+      this.updateShapeInHandleTouchMove1(up, down);
+      this.updateSphereInHandleTouchMove1();
+    },
+    updateSphereInHandleTouchMove1() {
+      const newSphereDown =
+        (Math.PI / 180) * (1.2 * this.swingChangeSettingObj.target_angle - 60);
+      this.spheres[0].position.set(
+        this.swingRangeRadius * Math.cos(newSphereDown),
+        this.swingRangeRadius * Math.sin(newSphereDown),
+        this.sphereRadius / 2
+      );
+    },
+    updateShapeInHandleTouchMove1(up, down) {
+      this.updateShapeInHandleTouchMove2(up, down);
+    },
+    handleTouchMove1(event) {
+      // let offset = touch.x - originX
+      // let factor = 3
+      // // 手指位移2/factor映射120度
+      // const sensitive = -(2 / factor) / 120
+      // let currentAngle = this.swingChangeSettingObj.target_angle * 1.2
+      // this.swingChangeSettingObj.target_angle = Math.max(
+      //   0,
+      //   Math.min(100, ((currentAngle + offset / sensitive) * 100) / 120)
+      // )
+
+      if (!draggingSphere) return;
+
+      // let originX = touch.x
+      // 计算触摸位置
+      touch.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+      touch.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+      let v = new THREE.Vector3();
+      this.swingRangeShape.getWorldPosition(v);
+      // 扇形圆心在屏幕上的坐标
+      let swingRangeOrigin2D = threeConversionTwo(v.clone(), this.camera);
+      // 当前拖动的把柄在屏幕上的坐标
+      draggingSphere.getWorldPosition(calVectorSwingRange);
+      let swingRangePoint2D = threeConversionTwo(
+        calVectorSwingRange.clone(),
+        this.camera
+      );
+      // 找到屏幕上横坐标跟触摸位置对应的，而且在扇形所在圆上的点
+      let p = findPointOnCircleWithGivenX(
+        swingRangeOrigin2D,
+        swingRangePoint2D,
+        ((touch.x + 1) / 2) * window.innerWidth
+      );
+      // 扇形最右端点在屏幕上的坐标
+      sphereRight.getWorldPosition(calVectorSwingRange);
+      let sphereRight2D = threeConversionTwo(
+        calVectorSwingRange.clone(),
+        this.camera
+      );
+
+      let angleOffset = this.calculateAngleOffset(
+        p,
+        sphereRight2D,
+        swingRangeOrigin2D
+      );
+      this.swingChangeSettingObj.target_angle = Math.max(
+        0,
+        Math.min(100, (angleOffset * 100) / 120)
+      );
+      this.updateComputed()
+
+      const offset = targetAngleOffset;
+      const up =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle + offset) - 60);
+      const down =
+        (Math.PI / 180) *
+        (1.2 * (this.swingChangeSettingObj.target_angle - offset) - 60);
+      this.updateShapeInHandleTouchMove1(up, down);
+      this.updateSphereInHandleTouchMove1();
+    },
+    onTouchStartSwingRange1(event) {
+      // 获取Touch事件的坐标，将坐标转换为Three.js中的向量
+      touch.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+      touch.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+      // console.error(touch.x, touch.y)
+
+      // 设置射线的起点和方向
+      raycaster.setFromCamera(touch, this.camera);
+
+      let t = touch.clone();
+      draggingSphere = null;
+
+      if (
+        t.x >= this.dragRange.left.x &&
+        t.x <= this.dragRange.right.x &&
+        t.y <= this.dragRange.top.y &&
+        t.y >= this.dragRange.bottom.y
+      ) {
+        draggingSphere = this.spheres[0];
+      }
+
+      for (let r = 0; r < 0.1; r += 0.001) {
+        if (draggingSphere) break;
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 90) {
+          if (draggingSphere) break;
+          t.x = touch.x + r * Math.cos(angle);
+          t.y = touch.y + r * Math.sin(angle);
+
+          // 设置射线的起点和方向
+          raycaster.setFromCamera(t, this.camera);
+
+          // 检测射线与球体是否相交
+          let intersects = raycaster.intersectObject(this.spheres[0]);
+          draggingHead = intersects.length > 0;
+          if (intersects.length > 0) {
+            draggingSphere = this.spheres[0];
+          } else {
+            draggingSphere = null;
+          }
+        }
+      }
+      // console.log('onTouchStart', draggingSphere)
+    },
     udOptionClick(event) {
       if (!this.upPanel.show) return;
       let value = event.currentTarget.dataset.option;
@@ -996,8 +1128,9 @@ module.exports = Behavior({
       if (this.seeingSwingRange) {
         // 确定
         if (draggingHead) {
-          this.statusData.target_angle =
-            this.swingChangeSettingObj.target_angle;
+          this.setData({
+            "statusData.target_angle": this.swingChangeSettingObj.target_angle,
+          });
           // console.log(this.swingChangeSettingObj)
           this.postDataToWeex({
             type: "lrFocusChanged",
@@ -2575,6 +2708,12 @@ module.exports = Behavior({
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
       this.currentTransformType = null;
+      this.dragRange = {
+        left: { x: -0.5, y: 0.3588225364685058 },
+        top: { x: 0.025357503255208247, y: 0.5427528381347656 },
+        right: { x: 0.5, y: 0.345390510559082 },
+        bottom: { x: 0.01633300781249991, y: 0.1625185012817382 },
+      };
       this.setData({
         activeTab: "lr",
       });
@@ -2704,6 +2843,9 @@ module.exports = Behavior({
       if (this.swingChangeSettingObj) {
         this.swingChangeSettingObj.ud_swing_angle = statusData.ud_swing_angle;
         this.updateComputed();
+      }
+      if (this.seeingSwingRange) {
+        this.updateTargetAngle();
       }
     },
   },
