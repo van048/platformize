@@ -11,7 +11,7 @@
     <button class="btn" bindtap="test7">homeBackOff</button>
   </view>
   <view class="model-mask height-transition" style="height:{{modelMaskStyleObj.height}}"></view>
-  <view class="up-switch-wrapper flex-rcc {{lookPanel.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}" wx:if="lookPanel.show">
+  <view class="up-switch-wrapper flex-rcc {{lookPanel.show?'fade-slide-y-switch-origin':'fade-slide-y-switch-enter'}}">
     <view data-item="{{item}}" wx:for="{{lookPanel.options}}" wx:key="item" class="look-option flex-ccc {{item === lookPanel.activeOption?'look-option-active':''}}" bindtap="lookOptionClick">
       <view class="look-option-content" style="background: {{item}}"></view>
     </view>

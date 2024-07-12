@@ -512,12 +512,12 @@ module.exports = Behavior({
       this.swingChangeSettingObj.lr_diy_down_percent = Math.max(
         0,
         draggingSwingShape.current.down + angleOffset
-      )
+      );
       // up，左边的
       this.swingChangeSettingObj.lr_diy_up_percent = Math.min(
         100,
         draggingSwingShape.current.up + angleOffset
-      )
+      );
       // console.error(
       //   (angleOffset * 120) / 100,
       //   this.swingChangeSettingObj.lr_diy_down_percent,
@@ -528,7 +528,7 @@ module.exports = Behavior({
       //   p.y
       // )
       let originDiff =
-        draggingSwingShape.current.up - draggingSwingShape.current.down
+        draggingSwingShape.current.up - draggingSwingShape.current.down;
       if (
         this.swingChangeSettingObj.lr_diy_up_percent -
           this.swingChangeSettingObj.lr_diy_down_percent <
@@ -536,26 +536,26 @@ module.exports = Behavior({
       ) {
         if (this.swingChangeSettingObj.lr_diy_up_percent == 100) {
           this.swingChangeSettingObj.lr_diy_down_percent =
-            this.swingChangeSettingObj.lr_diy_up_percent - originDiff
+            this.swingChangeSettingObj.lr_diy_up_percent - originDiff;
         }
         if (this.swingChangeSettingObj.lr_diy_down_percent == 0) {
           this.swingChangeSettingObj.lr_diy_up_percent =
-            this.swingChangeSettingObj.lr_diy_down_percent + originDiff
+            this.swingChangeSettingObj.lr_diy_down_percent + originDiff;
         }
       }
     },
     getPTouchStart(swingRangeOrigin2D) {
       // 当前拖动的把柄在屏幕上的坐标
-      this.spheres[0].getWorldPosition(calVectorSwingRange)
+      this.spheres[0].getWorldPosition(calVectorSwingRange);
       let swingRangePoint2D = threeConversionTwo(
         calVectorSwingRange.clone(),
         this.camera
-      )
+      );
       return findPointOnCircleWithGivenX(
         swingRangeOrigin2D,
         swingRangePoint2D,
         ((draggingSwingShape.touch.x + 1) / 2) * window.innerWidth
-      )
+      );
     },
     postDataToWeex(obj) {
       console.error(obj);
@@ -1230,6 +1230,7 @@ module.exports = Behavior({
       light.color = this.convertColor(color);
     },
     lookOptionClick(event) {
+      if (!this.lookPanel.show) return;
       let value = event.currentTarget.dataset.item;
       this.selectColor(value);
       this.confirmChangeColor();
@@ -2370,6 +2371,9 @@ module.exports = Behavior({
     },
   },
   observers: {
+    "lookPanel.**": function (lookPanel) {
+      this.lookPanel = lookPanel;
+    },
     activeTab: function (activeTab) {
       this.activeTab = activeTab;
     },
