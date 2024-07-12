@@ -2110,6 +2110,8 @@ module.exports = Behavior({
       });
       three.PlatformManager.set(platform);
       window = three.PlatformManager.polyfill.window;
+      window.innerWidth = canvas.width;
+      window.innerHeight = canvas.height;
       requestAnimationFrame =
         three.PlatformManager.polyfill.requestAnimationFrame;
 
