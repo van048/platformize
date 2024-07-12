@@ -566,10 +566,12 @@ module.exports = Behavior({
           break;
       }
     },
+    // TODO
     hideLoadingApng() {
       this.controlLoading = false;
       this.loadingType = null;
     },
+    // TODO
     showLoadingApng() {
       this.controlLoading = true;
     },
@@ -982,6 +984,7 @@ module.exports = Behavior({
         ((draggingSwingShape.touch.x + 1) / 2) * window.innerWidth
       );
     },
+    // TODO
     postDataToWeex(obj) {
       console.error(obj);
     },
@@ -2214,6 +2217,7 @@ module.exports = Behavior({
         udDeg = 0;
       }
     },
+    // TODO
     tryTellThreeLoaded() {
       if (this.threeLoaded) {
         this.postDataToWeex({
@@ -2646,9 +2650,11 @@ module.exports = Behavior({
       // Updates the camera projection matrix. Must be called after any change of parameters.
       this.camera.updateProjectionMatrix();
     },
+    // TODO
     showLoading(message) {
       wx.showLoading({ title: message });
     },
+    // TODO
     hideLoading() {
       wx.hideLoading();
     },
@@ -2719,6 +2725,7 @@ module.exports = Behavior({
         }
       );
     },
+    // TODO
     onWindowResize() {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
@@ -2835,6 +2842,14 @@ module.exports = Behavior({
       }
 
       window.addEventListener("resize", this.onWindowResize);
+      // TODO
+      window.addEventListener("touchstart", this.onTouchStart, {
+        passive: false,
+      });
+      window.addEventListener("touchmove", this.onTouchMove, {
+        passive: false,
+      });
+      window.addEventListener("touchend", this.onTouchEnd, { passive: false });
     },
   },
   observers: {
