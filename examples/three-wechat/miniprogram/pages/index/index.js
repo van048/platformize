@@ -132,7 +132,11 @@ Component({
     },
 
     onTX(e) {
+      // console.error(e)
       this.platform.dispatchTouchEvent(e);
+      if (e.type == 'touchstart') this.onTouchStart(e)
+      else if (e.type == 'touchmove') this.onTouchMove(e)
+      else if (e.type == 'touchend') this.onTouchEnd(e)
     },
 
     onUnload() {

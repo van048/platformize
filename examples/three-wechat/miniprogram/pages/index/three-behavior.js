@@ -178,6 +178,8 @@ let lrDirectionFlag = 1;
 // 头部拖动中标志
 let draggingHead;
 let draggingSphere;
+const touch = new THREE.Vector2();
+let draggingSwingShape;
 
 // 本地保存自定义外观的key
 let customColorKey = "GDG24FG_customColor";
@@ -446,6 +448,116 @@ module.exports = Behavior({
       this.transform("homeBackOff");
     },
 
+    onTouchEnd() {
+      if (this.seeingSwingRange) {
+        // 确定
+        if (draggingHead) {
+          this.statusData.target_angle = this.swingChangeSettingObj.target_angle
+          // console.log(this.swingChangeSettingObj)
+          this.postDataToWeex({
+            type: 'lrFocusChanged',
+            value: JSON.stringify(this.swingChangeSettingObj),
+          })
+        }
+      }
+      if (this.seeingSwingRange2) {
+        if (draggingSphere || draggingSwingShape) {
+          this.swingChangeSettingObj.lr_diy_down_percent = Math.round(
+            this.swingChangeSettingObj.lr_diy_down_percent
+          )
+          this.swingChangeSettingObj.lr_diy_up_percent = Math.round(
+            this.swingChangeSettingObj.lr_diy_up_percent
+          )
+
+          this.statusData.lr_diy_down_percent =
+            this.swingChangeSettingObj.lr_diy_down_percent
+          this.statusData.lr_diy_up_percent =
+            this.swingChangeSettingObj.lr_diy_up_percent
+          this.statusData.display_left_angle =
+            this.swingChangeSettingObj.display_left_angle
+          // console.log(this.swingChangeSettingObj)
+          this.postDataToWeex({
+            type: 'lrSwingRangeChanged',
+            value: JSON.stringify(this.swingChangeSettingObj),
+          })
+        }
+      }
+    },
+    onTouchMove(event) {
+      if (this.seeingSwingRange) {
+        this.handleTouchMove1(event);
+      }
+      if (this.seeingSwingRange2) {
+        this.handleTouchMove2(event);
+        this.handleTouchMoveSwingShape(event);
+      }
+    },
+    onTouchStartSwingRange2(event) {
+      // 获取Touch事件的坐标，将坐标转换为Three.js中的向量
+      touch.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+      touch.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+
+      let t = touch.clone();
+      draggingSphere = null;
+      draggingSwingShape = null;
+      // 设置射线的起点和方向
+      raycaster.setFromCamera(t, this.camera);
+
+      for (let r = 0; r < 0.1; r += 0.001) {
+        if (draggingSphere) break;
+        for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 90) {
+          if (draggingSphere) break;
+          t.x = touch.x + r * Math.cos(angle);
+          t.y = touch.y + r * Math.sin(angle);
+
+          // 设置射线的起点和方向
+          raycaster.setFromCamera(t, this.camera);
+
+          // 检测射线与球体是否相交
+          let intersects = raycaster.intersectObject(this.spheres[0]);
+          if (intersects.length > 0) {
+            draggingSphere = this.spheres[0];
+          } else {
+            intersects = raycaster.intersectObject(this.spheres[1]);
+            if (intersects.length > 0) {
+              draggingSphere = this.spheres[1];
+            } else {
+              draggingSphere = null;
+            }
+          }
+        }
+      }
+
+      t = touch.clone();
+      if (draggingSphere) return;
+      raycaster.setFromCamera(t, this.camera);
+      // 检测射线与球体是否相交
+      let intersects = raycaster.intersectObject(this.rangePlane);
+      if (intersects.length > 0) {
+        draggingSwingShape = {
+          touch: t,
+          current: {
+            down: this.statusData.lr_diy_down_percent,
+            up: this.statusData.lr_diy_up_percent,
+          },
+        };
+      } else {
+        draggingSwingShape = null;
+      }
+      // console.error(draggingSwingShape)
+    },
+    onTouchStart(event) {
+      if (this.seeingSwingRange) {
+        this.onTouchStartSwingRange1(event);
+      }
+
+      // 送风范围
+      if (this.seeingSwingRange2) {
+        if (!this.spheres) return;
+
+        this.onTouchStartSwingRange2(event);
+      }
+    },
     reset() {
       this.seeingSwingRange = false;
       draggingHead = false;
@@ -1875,7 +1987,6 @@ module.exports = Behavior({
       this.clockCal = new THREE.Clock();
       this.startTime = new Date().getTime();
       this.currentTransformType = null;
-
       this.setData({
         activeTab: "lr",
       });
